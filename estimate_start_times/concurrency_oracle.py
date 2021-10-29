@@ -1,3 +1,4 @@
+from datetime import datetime
 from pm4py.algo.filtering.log.attributes import attributes_filter
 
 
@@ -8,7 +9,7 @@ class ConcurrencyOracle:
         # Dict with the concurrency: self.concurrency[actA] = list of activities concurrent with A
         self.concurrency = concurrency
 
-    def enabled_since(self, trace, event):
+    def enabled_since(self, trace, event) -> datetime:
         return next(
             (previous_event['time:timestamp'] for previous_event in reversed(trace) if (
                     previous_event['time:timestamp'] < event['time:timestamp'] and

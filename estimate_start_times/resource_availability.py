@@ -1,4 +1,5 @@
 import pm4py
+from datetime import datetime
 from pm4py.algo.filtering.log.attributes import attributes_filter
 
 
@@ -22,7 +23,7 @@ class ResourceAvailability:
             )
             self.resources_calendar[resource] = sorted(event['time:timestamp'] for event in resource_events)
 
-    def available_since(self, resource, timestamp):
+    def available_since(self, resource, timestamp) -> datetime:
         if resource == self.missing_resource:
             # If the resource is missing return [initial_time]
             timestamp_previous_event = self.initial_time

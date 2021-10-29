@@ -5,16 +5,19 @@
 import pytz
 import pm4py
 from datetime import datetime
+
+from pm4py.objects.log.obj import EventLog
+from pm4py.objects.log.exporter.xes import exporter as xes_exporter
+
 from concurrency_oracle import AlphaConcurrencyOracle
 from estimate_start_times import estimate_start_timestamps
 from resource_availability import ResourceAvailability
-from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 
 missing_resource = "missing_resource"
 initial_time = datetime.min.replace(tzinfo=pytz.UTC)
 
 
-def read_log(log_path):
+def read_log(log_path) -> EventLog:
     # Read log
     event_log = pm4py.read_xes(log_path)
     # Fix missing resources
@@ -25,7 +28,7 @@ def read_log(log_path):
     return event_log
 
 
-def main(event_log_path):
+def main(event_log_path) -> None:
     # Read event log
     event_log = read_log(event_log_path)
     # Build concurrency oracle

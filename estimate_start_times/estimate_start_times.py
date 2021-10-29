@@ -1,8 +1,10 @@
 #
 # Author: David Chapela de la Campa
 #
+from pm4py.objects.log.obj import EventLog
 
-def estimate_start_timestamps(event_log, concurrency_oracle, resource_availability):
+
+def estimate_start_timestamps(event_log, concurrency_oracle, resource_availability) -> EventLog:
     # Assign start timestamps
     i = 0
     print("Starting inference")
