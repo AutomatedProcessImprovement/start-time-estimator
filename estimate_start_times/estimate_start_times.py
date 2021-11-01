@@ -28,7 +28,7 @@ def estimate_start_timestamps(event_log,
     if fix_method == FixMethod.SET_INSTANT:
         estimated_event_log = set_instant_non_estimated_start_times(event_log, concurrency_oracle.initial_time)
     elif fix_method == FixMethod.RE_ESTIMATE:
-        estimated_event_log = fix_non_estimated_start_times(event_log, concurrency_oracle.initial_time)
+        estimated_event_log = re_estimate_non_estimated_start_times(event_log, concurrency_oracle.initial_time)
     else:
         print("Unselected fix method for events with no estimated start time! Setting them as instant by default.")
         estimated_event_log = set_instant_non_estimated_start_times(event_log, concurrency_oracle.initial_time)
@@ -48,7 +48,7 @@ def set_instant_non_estimated_start_times(event_log, non_estimated_time) -> Even
     return event_log
 
 
-def fix_non_estimated_start_times(event_log, non_estimated_time) -> EventLog:
+def re_estimate_non_estimated_start_times(event_log, non_estimated_time) -> EventLog:
     # Identify events with non_estimated as start time
     # and store the durations of the estimated ones
     non_estimated_events = []
