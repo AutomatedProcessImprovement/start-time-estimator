@@ -1,13 +1,13 @@
 import pm4py
 import pytz
 from datetime import datetime
-from estimate_start_times.resource_availability import ResourceAvailability
+from event_log.resource_availability import ResourceAvailability
 
 
 def test_resource_availability():
     initial_time = datetime.min.replace(tzinfo=pytz.UTC)
     missing_resource = 'missing_resource'
-    event_log = pm4py.read_xes('./event_logs/test_event_log_1.xes')
+    event_log = pm4py.read_xes('../assets/test_event_log_1.xes')
     resource_availability = ResourceAvailability(event_log, initial_time, missing_resource)
     # The initial time to use as default is the passed
     assert resource_availability.initial_time == initial_time
