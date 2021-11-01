@@ -12,7 +12,7 @@ from datetime import timedelta
 
 def test_estimate_start_times_instant():
     initial_time = datetime.min.replace(tzinfo=pytz.UTC)
-    event_log = pm4py.read_xes('.\\event_logs\\test_event_log_1.xes')
+    event_log = pm4py.read_xes('./event_logs/test_event_log_1.xes')
     concurrency_oracle = NoConcurrencyOracle(event_log, initial_time)
     resource_availability = ResourceAvailability(event_log, initial_time, 'missing_resource')
     extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability)
@@ -31,7 +31,7 @@ def test_estimate_start_times_instant():
 
 def test_estimate_start_times_re_estimate():
     initial_time = datetime.min.replace(tzinfo=pytz.UTC)
-    event_log = pm4py.read_xes('.\\event_logs\\test_event_log_1.xes')
+    event_log = pm4py.read_xes('./event_logs/test_event_log_1.xes')
     concurrency_oracle = NoConcurrencyOracle(event_log, initial_time)
     resource_availability = ResourceAvailability(event_log, initial_time, 'missing_resource')
     extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle,
@@ -45,7 +45,7 @@ def test_estimate_start_times_re_estimate():
 
 def test_set_instant_non_estimated_start_times():
     non_estimated_time = datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
-    event_log = pm4py.read_xes('.\\event_logs\\test_event_log_2.xes')
+    event_log = pm4py.read_xes('./event_logs/test_event_log_2.xes')
     extended_event_log = set_instant_non_estimated_start_times(event_log, non_estimated_time)
     # The start time of non-estimated events is the end time (instant events)
     assert extended_event_log[0][0]['start:timestamp'] == extended_event_log[0][0]['time:timestamp']
@@ -54,7 +54,7 @@ def test_set_instant_non_estimated_start_times():
 
 def test_re_estimate_non_estimated_start_times():
     non_estimated_time = datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
-    event_log = pm4py.read_xes('.\\event_logs\\test_event_log_2.xes')
+    event_log = pm4py.read_xes('./event_logs/test_event_log_2.xes')
     extended_event_log = re_estimate_non_estimated_start_times(event_log,non_estimated_time )
     # The start time of non-estimated events is the most frequent processing time
     assert extended_event_log[0][0]['start:timestamp'] == extended_event_log[0][0]['time:timestamp'] - \

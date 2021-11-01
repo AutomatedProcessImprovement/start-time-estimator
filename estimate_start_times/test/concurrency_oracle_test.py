@@ -5,7 +5,7 @@ from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle
 from estimate_start_times.concurrency_oracle import NoConcurrencyOracle
 
 initial_time = datetime.min.replace(tzinfo=pytz.UTC)
-event_log_1 = pm4py.read_xes('.\\event_logs\\test_event_log_1.xes')
+event_log_1 = pm4py.read_xes('./event_logs/test_event_log_1.xes')
 
 
 def test_no_concurrency_oracle():
