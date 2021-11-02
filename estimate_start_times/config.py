@@ -10,6 +10,16 @@ class ReEstimationMethod(enum.Enum):
     MODE = 2
 
 
+class ConcurrencyOracleType(enum.Enum):
+    NONE = 1
+    ALPHA = 2
+
+
+class ResourceAvailabilityType(enum.Enum):
+    SIMPLE = 1  # Consider all the events that each resource performs
+    WITH_CALENDAR = 2  # Future possibility considering also the resource calendars and non-working days
+
+
 @dataclass
 class EventLogIDs:
     case: str = 'case'
@@ -30,6 +40,8 @@ DEFAULT_XES_IDS = EventLogIDs(case='concept:name',
 @dataclass
 class Configuration:
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
+    concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.ALPHA
+    resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
     missing_resource: str = "missing_resource"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE

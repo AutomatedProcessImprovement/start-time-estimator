@@ -1,22 +1,21 @@
 from datetime import datetime
 from datetime import timedelta
 
-from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod
-from event_log.concurrency_oracle import NoConcurrencyOracle
-from event_log.estimate_start_times import estimate_start_timestamps
-from event_log.estimate_start_times import re_estimate_non_estimated_start_times
-from event_log.estimate_start_times import set_instant_non_estimated_start_times
-from event_log.resource_availability import ResourceAvailability
+from config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ResourceAvailabilityType
+from event_log.estimate_start_times import StartTimeEstimator
 from event_log_readers import read_xes_log
 
 
 def test_estimate_start_times_instant():
-    config = Configuration(log_ids=DEFAULT_XES_IDS,
-                           re_estimation_method=ReEstimationMethod.SET_INSTANT)
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
+    )
     event_log = read_xes_log('../assets/test_event_log_1.xes', config)
-    concurrency_oracle = NoConcurrencyOracle(event_log, config)
-    resource_availability = ResourceAvailability(event_log, config)
-    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the end time (instant events)
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == extended_event_log[0][0][config.log_ids.end_timestamp]
     assert extended_event_log[3][0][config.log_ids.start_timestamp] == extended_event_log[3][0][config.log_ids.end_timestamp]
@@ -31,13 +30,15 @@ def test_estimate_start_times_instant():
 
 
 def test_estimate_start_times_re_estimate():
-    config = Configuration(log_ids=DEFAULT_XES_IDS,
-                           re_estimation_method=ReEstimationMethod.MODE)
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MODE,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
+    )
     event_log = read_xes_log('../assets/test_event_log_1.xes', config)
-    concurrency_oracle = NoConcurrencyOracle(event_log, config)
-    resource_availability = ResourceAvailability(event_log, config)
-    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle,
-                                                   resource_availability, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the most frequent processing time
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == extended_event_log[0][0][config.log_ids.end_timestamp] - \
            (extended_event_log[2][0][config.log_ids.end_timestamp] - extended_event_log[0][0][config.log_ids.end_timestamp])
@@ -48,11 +49,14 @@ def test_estimate_start_times_re_estimate():
 def test_set_instant_non_estimated_start_times():
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
-        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        re_estimation_method=ReEstimationMethod.SET_INSTANT
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('../assets/test_event_log_2.xes', config)
-    extended_event_log = set_instant_non_estimated_start_times(event_log, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator._set_instant_non_estimated_start_times()
     # The start time of non-estimated events is the end time (instant events)
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == extended_event_log[0][0][config.log_ids.end_timestamp]
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == extended_event_log[1][1][config.log_ids.end_timestamp]
@@ -61,11 +65,14 @@ def test_set_instant_non_estimated_start_times():
 def test_re_estimate_non_estimated_start_times():
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
-        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        re_estimation_method=ReEstimationMethod.MODE
+        re_estimation_method=ReEstimationMethod.MODE,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('../assets/test_event_log_2.xes', config)
-    extended_event_log = re_estimate_non_estimated_start_times(event_log, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
     # The start time of non-estimated events is the most frequent processing time
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=15)

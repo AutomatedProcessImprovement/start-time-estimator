@@ -1,21 +1,20 @@
 from datetime import datetime
 from datetime import timedelta
 
-from config import Configuration, ReEstimationMethod
-from data_frame.concurrency_oracle import NoConcurrencyOracle
-from data_frame.estimate_start_times import estimate_start_timestamps
-from data_frame.estimate_start_times import re_estimate_non_estimated_start_times
-from data_frame.estimate_start_times import set_instant_non_estimated_start_times
-from data_frame.resource_availability import ResourceAvailability
+from config import ConcurrencyOracleType, Configuration, ReEstimationMethod, ResourceAvailabilityType
+from data_frame.estimate_start_times import StartTimeEstimator
 from event_log_readers import read_csv_log
 
 
 def test_estimate_start_times_instant():
-    config = Configuration(re_estimation_method=ReEstimationMethod.SET_INSTANT)
+    config = Configuration(
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
+    )
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
-    concurrency_oracle = NoConcurrencyOracle(event_log, config)
-    resource_availability = ResourceAvailability(event_log, config)
-    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == first_trace.iloc[0][config.log_ids.end_timestamp]
@@ -34,11 +33,14 @@ def test_estimate_start_times_instant():
 
 
 def test_estimate_start_times_re_estimate():
-    config = Configuration(re_estimation_method=ReEstimationMethod.MODE)
+    config = Configuration(
+        re_estimation_method=ReEstimationMethod.MODE,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
+    )
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
-    concurrency_oracle = NoConcurrencyOracle(event_log, config)
-    resource_availability = ResourceAvailability(event_log, config)
-    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the most frequent processing time
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
@@ -51,11 +53,14 @@ def test_estimate_start_times_re_estimate():
 
 def test_set_instant_non_estimated_start_times():
     config = Configuration(
-        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        re_estimation_method=ReEstimationMethod.SET_INSTANT
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_csv_log('../assets/test_event_log_2.csv', config)
-    extended_event_log = set_instant_non_estimated_start_times(event_log, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator._set_instant_non_estimated_start_times()
     # The start time of non-estimated events is the end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == first_trace.iloc[0][config.log_ids.end_timestamp]
@@ -65,11 +70,14 @@ def test_set_instant_non_estimated_start_times():
 
 def test_re_estimate_non_estimated_start_times():
     config = Configuration(
-        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        re_estimation_method=ReEstimationMethod.MODE
+        re_estimation_method=ReEstimationMethod.MODE,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_csv_log('../assets/test_event_log_2.csv', config)
-    extended_event_log = re_estimate_non_estimated_start_times(event_log, config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
     # The start time of non-estimated events is the most frequent processing time
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
