@@ -1,4 +1,10 @@
 import itertools
+from enum import Enum
+
+
+class EventLogType(Enum):
+    EVENT_LOG = 1
+    DATA_FRAME = 2
 
 
 def zip_with_next(iterable):
