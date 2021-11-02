@@ -1,9 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
-from config import Configuration, DEFAULT_XES_IDS
+from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod
 from event_log.concurrency_oracle import NoConcurrencyOracle
-from event_log.estimate_start_times import FixMethod
 from event_log.estimate_start_times import estimate_start_timestamps
 from event_log.estimate_start_times import re_estimate_non_estimated_start_times
 from event_log.estimate_start_times import set_instant_non_estimated_start_times
@@ -13,7 +12,7 @@ from event_log_readers import read_xes_log
 
 def test_estimate_start_times_instant():
     config = Configuration(log_ids=DEFAULT_XES_IDS,
-                           fix_method=FixMethod.SET_INSTANT)
+                           re_estimation_method=ReEstimationMethod.SET_INSTANT)
     event_log = read_xes_log('../assets/test_event_log_1.xes', config)
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     resource_availability = ResourceAvailability(event_log, config)
@@ -33,7 +32,7 @@ def test_estimate_start_times_instant():
 
 def test_estimate_start_times_re_estimate():
     config = Configuration(log_ids=DEFAULT_XES_IDS,
-                           fix_method=FixMethod.RE_ESTIMATE)
+                           re_estimation_method=ReEstimationMethod.MODE)
     event_log = read_xes_log('../assets/test_event_log_1.xes', config)
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     resource_availability = ResourceAvailability(event_log, config)
@@ -50,7 +49,7 @@ def test_set_instant_non_estimated_start_times():
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        fix_method=FixMethod.SET_INSTANT
+        re_estimation_method=ReEstimationMethod.SET_INSTANT
     )
     event_log = read_xes_log('../assets/test_event_log_2.xes', config)
     extended_event_log = set_instant_non_estimated_start_times(event_log, config)
@@ -63,7 +62,7 @@ def test_re_estimate_non_estimated_start_times():
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        fix_method=FixMethod.RE_ESTIMATE
+        re_estimation_method=ReEstimationMethod.MODE
     )
     event_log = read_xes_log('../assets/test_event_log_2.xes', config)
     extended_event_log = re_estimate_non_estimated_start_times(event_log, config)

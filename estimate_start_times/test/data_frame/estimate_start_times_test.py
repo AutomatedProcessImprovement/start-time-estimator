@@ -1,9 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
-from config import Configuration
+from config import Configuration, ReEstimationMethod
 from data_frame.concurrency_oracle import NoConcurrencyOracle
-from data_frame.estimate_start_times import FixMethod
 from data_frame.estimate_start_times import estimate_start_timestamps
 from data_frame.estimate_start_times import re_estimate_non_estimated_start_times
 from data_frame.estimate_start_times import set_instant_non_estimated_start_times
@@ -12,7 +11,7 @@ from event_log_readers import read_csv_log
 
 
 def test_estimate_start_times_instant():
-    config = Configuration(fix_method=FixMethod.SET_INSTANT)
+    config = Configuration(re_estimation_method=ReEstimationMethod.SET_INSTANT)
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     resource_availability = ResourceAvailability(event_log, config)
@@ -35,7 +34,7 @@ def test_estimate_start_times_instant():
 
 
 def test_estimate_start_times_re_estimate():
-    config = Configuration(fix_method=FixMethod.RE_ESTIMATE)
+    config = Configuration(re_estimation_method=ReEstimationMethod.MODE)
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     resource_availability = ResourceAvailability(event_log, config)
@@ -53,7 +52,7 @@ def test_estimate_start_times_re_estimate():
 def test_set_instant_non_estimated_start_times():
     config = Configuration(
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        fix_method=FixMethod.SET_INSTANT
+        re_estimation_method=ReEstimationMethod.SET_INSTANT
     )
     event_log = read_csv_log('../assets/test_event_log_2.csv', config)
     extended_event_log = set_instant_non_estimated_start_times(event_log, config)
@@ -67,7 +66,7 @@ def test_set_instant_non_estimated_start_times():
 def test_re_estimate_non_estimated_start_times():
     config = Configuration(
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z'),
-        fix_method=FixMethod.RE_ESTIMATE
+        re_estimation_method=ReEstimationMethod.MODE
     )
     event_log = read_csv_log('../assets/test_event_log_2.csv', config)
     extended_event_log = re_estimate_non_estimated_start_times(event_log, config)

@@ -2,7 +2,7 @@ from statistics import mode
 
 from pm4py.objects.log.obj import EventLog
 
-from common import FixMethod
+from config import ReEstimationMethod
 
 
 def estimate_start_timestamps(event_log, concurrency_oracle, resource_availability, config) -> EventLog:
@@ -16,9 +16,9 @@ def estimate_start_timestamps(event_log, concurrency_oracle, resource_availabili
                 available_time
             )
     # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
-    if config.fix_method == FixMethod.SET_INSTANT:
+    if config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
         estimated_event_log = set_instant_non_estimated_start_times(event_log, config)
-    elif config.fix_method == FixMethod.RE_ESTIMATE:
+    elif config.re_estimation_method == ReEstimationMethod.MODE:
         estimated_event_log = re_estimate_non_estimated_start_times(event_log, config)
     else:
         print("Unselected fix method for events with no estimated start time! Setting them as instant by default.")

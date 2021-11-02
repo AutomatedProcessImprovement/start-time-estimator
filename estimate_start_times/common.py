@@ -1,10 +1,4 @@
-import enum
 import itertools
-
-
-class FixMethod(enum.Enum):
-    SET_INSTANT = 1
-    RE_ESTIMATE = 2
 
 
 def zip_with_next(iterable):

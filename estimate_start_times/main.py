@@ -1,5 +1,4 @@
-from common import FixMethod
-from config import Configuration, DEFAULT_CSV_IDS
+from config import Configuration, DEFAULT_CSV_IDS, ReEstimationMethod
 from data_frame.concurrency_oracle import AlphaConcurrencyOracle
 from data_frame.estimate_start_times import estimate_start_timestamps
 from data_frame.resource_availability import ResourceAvailability
@@ -10,7 +9,7 @@ def main(event_log_path) -> None:
     # Configuration
     config = Configuration(
         log_ids=DEFAULT_CSV_IDS,
-        fix_method=FixMethod.RE_ESTIMATE
+        re_estimation_method=ReEstimationMethod.MODE
     )
     # Read event log
     event_log = read_csv_log(event_log_path, config)

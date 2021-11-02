@@ -1,9 +1,13 @@
+import enum
 from dataclasses import dataclass
 from datetime import datetime
 
 import pytz
 
-from common import FixMethod
+
+class ReEstimationMethod(enum.Enum):
+    SET_INSTANT = 1
+    MODE = 2
 
 
 @dataclass
@@ -28,4 +32,4 @@ class Configuration:
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
     missing_resource: str = "missing_resource"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
-    fix_method: FixMethod = FixMethod.RE_ESTIMATE
+    re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
