@@ -1,14 +1,10 @@
 #
 # Author: David Chapela de la Campa
 #
-import enum
 from pm4py.objects.log.obj import EventLog
 from statistics import mode
 
-
-class FixMethod(enum.Enum):
-    SET_INSTANT = 1
-    RE_ESTIMATE = 2
+from common import FixMethod
 
 
 def estimate_start_timestamps(event_log,
