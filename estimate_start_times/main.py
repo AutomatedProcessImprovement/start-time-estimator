@@ -1,32 +1,29 @@
-#
-# Author: David Chapela de la Campa
-#
-
-import pytz
-from datetime import datetime
-from event_log_readers import read_xes_log
-from pm4py.objects.log.exporter.xes import exporter as xes_exporter
-
-from event_log.concurrency_oracle import AlphaConcurrencyOracle
-from event_log.estimate_start_times import estimate_start_timestamps
-from event_log.resource_availability import ResourceAvailability
-
-missing_resource = "missing_resource"
-initial_time = datetime.min.replace(tzinfo=pytz.UTC)
+from common import FixMethod
+from config import Configuration, DEFAULT_CSV_IDS
+from data_frame.concurrency_oracle import AlphaConcurrencyOracle
+from data_frame.estimate_start_times import estimate_start_timestamps
+from data_frame.resource_availability import ResourceAvailability
+from event_log_readers import read_csv_log
 
 
 def main(event_log_path) -> None:
+    # Configuration
+    config = Configuration(
+        log_ids=DEFAULT_CSV_IDS,
+        fix_method=FixMethod.RE_ESTIMATE
+    )
     # Read event log
-    event_log = read_xes_log(event_log_path, missing_resource)
+    event_log = read_csv_log(event_log_path, config)
     # Build concurrency oracle
-    concurrency_oracle = AlphaConcurrencyOracle(event_log, initial_time)
+    concurrency_oracle = AlphaConcurrencyOracle(event_log, config)
     # Build resource schedule
-    resource_availability = ResourceAvailability(event_log, initial_time, missing_resource)
+    resource_availability = ResourceAvailability(event_log, config)
     # Infer start timestamps
-    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability)
+    extended_event_log = estimate_start_timestamps(event_log, concurrency_oracle, resource_availability, config)
     # Export event log
-    xes_exporter.apply(extended_event_log, './extended_event_log.xes')
+    extended_event_log.to_csv("./assets/test.csv", index=False)
+    # xes_exporter.apply(extended_event_log, "../assets/extended_event_log.xes")
 
 
 if __name__ == '__main__':
-    main('../event_logs/BPI Challenge 2017.xes.gz')
+    main("test/assets/test_event_log_1.csv")
