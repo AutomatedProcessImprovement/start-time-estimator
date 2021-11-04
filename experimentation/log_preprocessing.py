@@ -31,6 +31,8 @@ def process_bpic_2017(event_log: pd.DataFrame) -> pd.DataFrame:
     event_log = event_log.sort_values(by=['case', 'end_timestamp'])
     # Retain only the W_* events, those which have 'start' and 'complete' lifecycles
     event_log = event_log[event_log['activity'].astype(str).str[0] == 'W']
+    # Rename the 'ate_abort' activities to distinguish them from the correct 'complete' ending
+    event_log.loc[event_log['lifecycle'] == 'ate_abort', 'activity'] = event_log['activity'] + ' (aborted)'
     # Transform the 'ate_abort' lifecycle into 'complete', as they have finished, with abort status, but finished
     event_log.loc[event_log['lifecycle'] == 'ate_abort', 'lifecycle'] = 'complete'
     # Retain only events with 'start' or 'complete' lifecycles
@@ -41,9 +43,11 @@ def process_bpic_2017(event_log: pd.DataFrame) -> pd.DataFrame:
     event_log = event_log[event_log['lifecycle'] == 'complete']
     # Retain only needed columns
     event_log = event_log[['case', 'activity', 'start_timestamp', 'end_timestamp', 'resource']]
+    # Sort again by end timestamp
+    event_log = event_log.sort_values(by=['end_timestamp'])
     # Return processed event log
     return event_log
 
 
 if __name__ == '__main__':
-    main("../event_logs/BPI Challenge 2017.xes.gz")
+    main("../event_logs/BPI_Challenge_2017.xes.gz")
