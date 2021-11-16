@@ -45,7 +45,7 @@ class AlphaConcurrencyOracle(ConcurrencyOracle):
             for actB in activities:
                 if actA != actB and actA in df_relations.get(actB, []) and actB in df_relations.get(actA, []):
                     # Concurrency relation AB, add it to A
-                    concurrency[actA] += actB
+                    concurrency[actA] += [actB]
         # Super
         super(AlphaConcurrencyOracle, self).__init__(concurrency, config)
 
