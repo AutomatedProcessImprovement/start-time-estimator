@@ -1,7 +1,20 @@
+from typing import Union
+
 import pandas as pd
 import pm4py
 from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.objects.log.obj import EventLog
+
+
+def read_event_log(log_path, config) -> Union[EventLog, pd.DataFrame]:
+    if log_path.endswith(".xes") or log_path.endswith(".xes.gz"):
+        event_log = read_xes_log(log_path, config)
+    elif log_path.endswith(".csv") or log_path.endswith(".csv.gz"):
+        event_log = read_csv_log(log_path, config)
+    else:
+        raise ValueError("Unknown event log file extension! Only 'xes', 'xes.gz', 'csv', and 'csv.gz' supported.")
+    # Return read event log
+    return event_log
 
 
 def read_xes_log(log_path, config) -> EventLog:
