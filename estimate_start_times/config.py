@@ -1,5 +1,5 @@
 import enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 import pytz
@@ -55,4 +55,5 @@ class Configuration:
     missing_resource: str = "missing_resource"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
+    bot_resources: set = field(default_factory=set)
     heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
