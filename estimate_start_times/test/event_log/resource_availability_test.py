@@ -38,3 +38,28 @@ def test_resource_availability():
         config.missing_resource,
         datetime.fromisoformat('2006-11-09T10:00:00.000+02:00')
     ) == config.non_estimated_time
+
+
+def test_resource_availability_bot_resources():
+    config = Configuration(log_ids=DEFAULT_XES_IDS, bot_resources={'Marcus', 'Dominic'})
+    event_log = read_xes_log('../assets/test_event_log_1.xes', config)
+    resource_availability = ResourceAvailability(event_log, config)
+    # The configuration for the algorithm is the passed
+    assert resource_availability.config == config
+    # All the resources have been loaded
+    assert set(resource_availability.resources_calendar.keys()) == {'Anya'}
+    # The availability of a bot resource is the same timestamp as checked
+    assert resource_availability.available_since(
+        'Marcus',
+        event_log[0][4][config.log_ids.end_timestamp]
+    ) == event_log[0][4][config.log_ids.end_timestamp]
+    # The availability of a bot resource is the same timestamp as checked
+    assert resource_availability.available_since(
+        'Dominic',
+        datetime.fromisoformat('2006-11-07T17:00:00.000+02:00')
+    ) == datetime.fromisoformat('2006-11-07T17:00:00.000+02:00')
+    # The availability of the resource is the [non_estimated_time] for the first event of the resource
+    assert resource_availability.available_since(
+        'Anya',
+        event_log[3][0][config.log_ids.end_timestamp]
+    ) == config.non_estimated_time
