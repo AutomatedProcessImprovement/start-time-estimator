@@ -43,7 +43,10 @@ def read_csv_log(log_path, config) -> pd.DataFrame:
     # Set case id as object
     event_log = event_log.astype({config.log_ids.case: object})
     # Fix missing resources
-    event_log[config.log_ids.resource].fillna(config.missing_resource, inplace=True)
+    if config.log_ids.resource not in event_log.columns:
+        event_log[config.log_ids.resource] = config.missing_resource
+    else:
+        event_log[config.log_ids.resource].fillna(config.missing_resource, inplace=True)
     # Convert timestamp values to datetime
     event_log[config.log_ids.end_timestamp] = pd.to_datetime(event_log[config.log_ids.end_timestamp], utc=True)
     if config.log_ids.start_timestamp in event_log.columns:
