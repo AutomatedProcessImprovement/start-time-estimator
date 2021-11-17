@@ -52,7 +52,7 @@ class Configuration:
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
     concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.ALPHA
     resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
-    missing_resource: str = "missing_resource"
+    missing_resource: str = "NOT_SET"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
     bot_resources: set = field(default_factory=set)
