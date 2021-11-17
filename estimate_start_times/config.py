@@ -13,6 +13,7 @@ class ReEstimationMethod(enum.Enum):
 class ConcurrencyOracleType(enum.Enum):
     NONE = 1
     ALPHA = 2
+    HEURISTICS = 3
 
 
 class ResourceAvailabilityType(enum.Enum):
@@ -40,6 +41,13 @@ DEFAULT_XES_IDS = EventLogIDs(case='concept:name',
 
 
 @dataclass
+class HeuristicsThresholds:
+    df: float = 0.9
+    l2l: float = 0.9
+    l1l: float = 0.9
+
+
+@dataclass
 class Configuration:
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
     concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.ALPHA
@@ -47,3 +55,4 @@ class Configuration:
     missing_resource: str = "missing_resource"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
+    heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()

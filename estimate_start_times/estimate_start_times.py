@@ -9,10 +9,12 @@ from common import EventLogType
 from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType
 from data_frame.concurrency_oracle import AlphaConcurrencyOracle as DFAlphaConcurrencyOracle
 from data_frame.concurrency_oracle import ConcurrencyOracle as DFConcurrencyOracle
+from data_frame.concurrency_oracle import HeuristicsConcurrencyOracle as DFHeuristicsConcurrencyOracle
 from data_frame.concurrency_oracle import NoConcurrencyOracle as DFNoConcurrencyOracle
 from data_frame.resource_availability import ResourceAvailability as DFResourceAvailability
 from event_log.concurrency_oracle import AlphaConcurrencyOracle as ELAlphaConcurrencyOracle
 from event_log.concurrency_oracle import ConcurrencyOracle as ELConcurrencyOracle
+from event_log.concurrency_oracle import HeuristicsConcurrencyOracle as ELHeuristicsConcurrencyOracle
 from event_log.concurrency_oracle import NoConcurrencyOracle as ELNoConcurrencyOracle
 from event_log.resource_availability import ResourceAvailability as ELResourceAvailability
 
@@ -47,6 +49,11 @@ class StartTimeEstimator:
             concurrency_oracle = DFAlphaConcurrencyOracle(self.event_log, self.config) \
                 if self.event_log_type == EventLogType.DATA_FRAME \
                 else ELAlphaConcurrencyOracle(self.event_log, self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:
+            # If selected type is HEURISTICS: instantiate DataFrame-HeuristicsConcurrencyOracle or EventLog-HeuristicsConcurrencyOracle
+            concurrency_oracle = DFHeuristicsConcurrencyOracle(self.event_log, self.config) \
+                if self.event_log_type == EventLogType.DATA_FRAME \
+                else ELHeuristicsConcurrencyOracle(self.event_log, self.config)
         else:
             # If none of the above, notify!
             print("No concurrency oracle defined! Setting Alpha as default.")

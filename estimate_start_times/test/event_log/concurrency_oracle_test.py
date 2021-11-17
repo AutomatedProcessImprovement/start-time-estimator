@@ -12,7 +12,8 @@ def test_no_concurrency_oracle():
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
     # No concurrency by default
-    assert concurrency_oracle.concurrency == {'A': [], 'B': [], 'C': [], 'D': [], 'E': [], 'F': [], 'G': [], 'H': [], 'I': []}
+    assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': set(), 'D': set(), 'E': set(),
+                                              'F': set(), 'G': set(), 'H': set(), 'I': set()}
     # There is no concurrency, so always enabled since the last event finished
     assert concurrency_oracle.enabled_since(event_log[0], event_log[0][4]) == event_log[0][3][config.log_ids.end_timestamp]
     # There is no concurrency, so always enabled since the last event finished
@@ -28,7 +29,8 @@ def test_alpha_concurrency_oracle():
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
     # Concurrency between the activities that appear both one before the other
-    assert concurrency_oracle.concurrency == {'A': [], 'B': [], 'C': ['D'], 'D': ['C'], 'E': [], 'F': [], 'G': [], 'H': [], 'I': []}
+    assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': {'D'}, 'D': {'C'}, 'E': set(),
+                                              'F': set(), 'G': set(), 'H': set(), 'I': set()}
     # Enabled since the previous event when there is no concurrency
     assert concurrency_oracle.enabled_since(event_log[0], event_log[0][6]) == event_log[0][5][config.log_ids.end_timestamp]
     # Enabled since the previous event when there is no concurrency
