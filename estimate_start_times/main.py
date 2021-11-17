@@ -6,51 +6,13 @@ from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.obj import EventLog
 
-from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, DEFAULT_CSV_IDS
+from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, DEFAULT_CSV_IDS, \
+    HeuristicsThresholds
 from estimate_start_times import StartTimeEstimator
 from event_log_readers import read_event_log
 
 
-def main(event_log_path) -> None:
-    # Configuration
-    config = Configuration(
-        # log_ids=DEFAULT_CSV_IDS,
-        log_ids=DEFAULT_XES_IDS,
-        re_estimation_method=ReEstimationMethod.MODE,
-        concurrency_oracle_type=ConcurrencyOracleType.ALPHA,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        missing_resource="NOT_SET"
-    )
-    # Read event log
-    event_log = read_event_log(event_log_path, config)
-
-    print("Starting start time estimation.")
-    start_time = time.process_time()
-    # Create start time estimator
-    start_time_estimator = StartTimeEstimator(event_log, config)
-    # Estimate start times
-    extended_event_log = start_time_estimator.estimate()
-    end_time = time.process_time()
-    print("Estimation finished ({}s).".format(end_time - start_time))
-
-    # Export event log
-    dataframe = log_converter \
-        .apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME) \
-        .rename(
-        columns={
-            'case:concept:name': 'case',
-            'concept:name': 'activity',
-            'start:timestamp': 'start_timestamp',
-            'time:timestamp': 'end_timestamp',
-            'org:resource': 'resource'
-        }
-    )
-    dataframe = dataframe[['case', 'activity', 'start_timestamp', 'end_timestamp', 'resource']]
-    dataframe.to_csv(event_log_path.replace('.xes', '_estimated.csv'), index=False)
-    # xes_exporter.apply(event_log, event_log_path.replace('.xes', '_estimated.xes'))
-
-
-def experimentation(dir_path):
+def main(dir_path):
     for filename in os.listdir(dir_path):
         event_log_path = "{}{}".format(dir_path, filename)
         if event_log_path.endswith(".xes"):
@@ -73,9 +35,10 @@ def experimentation(dir_path):
             # log_ids=DEFAULT_CSV_IDS,
             log_ids=log_ids,
             re_estimation_method=ReEstimationMethod.MODE,
-            concurrency_oracle_type=ConcurrencyOracleType.ALPHA,
+            concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
             resource_availability_type=ResourceAvailabilityType.SIMPLE,
-            missing_resource="NOT_SET"
+            missing_resource="NOT_SET",
+            heuristics_thresholds=HeuristicsThresholds(df=0.6, l2l=0.6)
         )
         # Read event log
         event_log = read_event_log(event_log_path, config)
@@ -97,7 +60,7 @@ def experimentation(dir_path):
                     columns={
                         'case:{}'.format(config.log_ids.case): 'case:concept:name',
                         config.log_ids.activity: 'concept:name',
-                        config.log_ids.start_timestamp: 'start:timestamp',
+                        config.log_ids.start_timestamp: 'time:start',
                         config.log_ids.end_timestamp: 'time:timestamp',
                         config.log_ids.resource: 'org:resource'
                     }
@@ -108,7 +71,7 @@ def experimentation(dir_path):
                 columns={
                     config.log_ids.case: 'case:concept:name',
                     config.log_ids.activity: 'concept:name',
-                    config.log_ids.start_timestamp: 'start:timestamp',
+                    config.log_ids.start_timestamp: 'time:start',
                     config.log_ids.end_timestamp: 'time:timestamp',
                     config.log_ids.resource: 'org:resource'
                 }
@@ -116,15 +79,15 @@ def experimentation(dir_path):
 
         # Transform to SIMOD input format: two events with lifecycles
         extended_event_log = extended_event_log[
-            ['case:concept:name', 'concept:name', 'start:timestamp', 'time:timestamp', 'org:resource']
+            ['case:concept:name', 'concept:name', 'time:start', 'time:timestamp', 'org:resource']
         ].sort_values(by=['case:concept:name', 'time:timestamp'])
         extended_event_log_start = extended_event_log.copy()
         extended_event_log_start['lifecycle:transition'] = 'start'
-        extended_event_log_start['time:timestamp'] = extended_event_log_start['start:timestamp']
+        extended_event_log_start['time:timestamp'] = extended_event_log_start['time:start']
         extended_event_log_end = extended_event_log.copy()
         extended_event_log_end['lifecycle:transition'] = 'complete'
         extended_event_log = pd.concat([extended_event_log_start, extended_event_log_end]) \
-            .drop(['start:timestamp'], axis=1) \
+            .drop(['time:start'], axis=1) \
             .rename_axis('index') \
             .sort_values(by=['time:timestamp', 'index', 'lifecycle:transition'], ascending=[True, True, False])
         # Unify date format to 'yyyy-mm-ddThh:mm:ss.sss+zz:zz' (chapuza)
@@ -153,5 +116,4 @@ def change_string_by_date(file_path):
 
 
 if __name__ == '__main__':
-    # main("../event_logs/Production.xes.gz")
-    experimentation("../event_logs/test/")
+    main("../event_logs/test/")

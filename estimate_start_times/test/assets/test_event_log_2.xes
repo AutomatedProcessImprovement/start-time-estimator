@@ -6,21 +6,21 @@
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="A"/>
-			<date key="start:timestamp" value="2000-01-01T10:00:00.000+02:00"/>
+			<date key="time:start" value="2000-01-01T10:00:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T10:30:00.000+02:00"/>
 		</event>
 		<event>
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="B"/>
-			<date key="start:timestamp" value="2006-11-07T11:10:00.000+02:00"/>
+			<date key="time:start" value="2006-11-07T11:10:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T11:30:00.000+02:00"/>
 		</event>
 		<event>
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="C"/>
-			<date key="start:timestamp" value="2006-11-07T12:50:00.000+02:00"/>
+			<date key="time:start" value="2006-11-07T12:50:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T13:00:00.000+02:00"/>
 		</event>
 	</trace>
@@ -30,21 +30,21 @@
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="A"/>
-			<date key="start:timestamp" value="2006-11-07T10:30:00.000+02:00"/>
+			<date key="time:start" value="2006-11-07T10:30:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T10:45:00.000+02:00"/>
 		</event>
 		<event>
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="B"/>
-			<date key="start:timestamp" value="2000-01-01T10:00:00.000+02:00"/>
+			<date key="time:start" value="2000-01-01T10:00:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T11:50:00.000+02:00"/>
 		</event>
 		<event>
 			<string key="org:resource" value="Marcus"/>
 			<string key="lifecycle:transition" value="complete"/>
 			<string key="concept:name" value="C"/>
-			<date key="start:timestamp" value="2006-11-07T13:00:00.000+02:00"/>
+			<date key="time:start" value="2006-11-07T13:00:00.000+02:00"/>
 			<date key="time:timestamp" value="2006-11-07T13:10:00.000+02:00"/>
 		</event>
 	</trace>
@@ -54,21 +54,21 @@
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="A"/>
-				<date key="start:timestamp" value="2006-11-07T10:45:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T10:45:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T10:55:00.000+02:00"/>
 			</event>
 			<event>
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="B"/>
-				<date key="start:timestamp" value="2006-11-07T11:50:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T11:50:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T12:20:00.000+02:00"/>
 			</event>
 			<event>
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="C"/>
-				<date key="start:timestamp" value="2006-11-07T13:10:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T13:10:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T13:15:00.000+02:00"/>
 			</event>
 		</trace>
@@ -78,21 +78,21 @@
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="A"/>
-				<date key="start:timestamp" value="2006-11-07T10:55:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T10:55:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T11:10:00.000+02:00"/>
 			</event>
 			<event>
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="B"/>
-				<date key="start:timestamp" value="2006-11-07T12:20:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T12:20:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T12:50:00.000+02:00"/>
 			</event>
 			<event>
 				<string key="org:resource" value="Marcus"/>
 				<string key="lifecycle:transition" value="complete"/>
 				<string key="concept:name" value="C"/>
-				<date key="start:timestamp" value="2006-11-07T13:15:00.000+02:00"/>
+				<date key="time:start" value="2006-11-07T13:15:00.000+02:00"/>
 				<date key="time:timestamp" value="2006-11-07T13:16:00.000+02:00"/>
 			</event>
 		</trace>

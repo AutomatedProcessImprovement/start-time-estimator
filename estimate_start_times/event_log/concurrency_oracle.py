@@ -5,7 +5,7 @@ from pm4py.algo.filtering.log.attributes import attributes_filter
 
 class ConcurrencyOracle:
     def __init__(self, concurrency, config):
-        # Dict with the concurrency: self.concurrency[actA] = list of activities concurrent with A
+        # Dict with the concurrency: self.concurrency[A] = list of activities concurrent with A
         self.concurrency = concurrency
         # Configuration parameters
         self.config = config
@@ -37,12 +37,12 @@ class AlphaConcurrencyOracle(ConcurrencyOracle):
         # Create concurrency if there is a directly-follows relation in both directions
         concurrency = {}
         activities = attributes_filter.get_attribute_values(event_log, config.log_ids.activity).keys()
-        for actA in activities:
-            concurrency[actA] = []
-            for actB in (activities - actA):
-                if actA in df_relations.get(actB, []) and actB in df_relations.get(actA, []):
+        for act_a in activities:
+            concurrency[act_a] = []
+            for act_b in (activities - act_a):
+                if act_a in df_relations.get(act_b, []) and act_b in df_relations.get(act_a, []):
                     # Concurrency relation AB, add it to A
-                    concurrency[actA] += [actB]
+                    concurrency[act_a] += [act_b]
         # Super
         super(AlphaConcurrencyOracle, self).__init__(concurrency, config)
 
