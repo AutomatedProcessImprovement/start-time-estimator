@@ -100,7 +100,9 @@ class StartTimeEstimator:
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_data_frame()
-        elif self.config.re_estimation_method == ReEstimationMethod.MODE:
+        elif (self.config.re_estimation_method == ReEstimationMethod.MODE or
+              self.config.re_estimation_method == ReEstimationMethod.MEDIAN or
+              self.config.re_estimation_method == ReEstimationMethod.MEAN):
             estimated_event_log = self._re_estimate_non_estimated_start_times_data_frame()
         else:
             print("Unselected re-estimation method for events with no estimated start time! Setting them as instant by default.")
@@ -129,8 +131,9 @@ class StartTimeEstimator:
         for index, non_estimated_event in non_estimated_events.iterrows():
             activity = non_estimated_event[self.config.log_ids.activity]
             if activity in activity_processing_times:
+                processing_time = self._get_processing_time(activity_processing_times[activity])
                 self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
-                    non_estimated_event[self.config.log_ids.end_timestamp] - mode(activity_processing_times[activity])
+                    non_estimated_event[self.config.log_ids.end_timestamp] - processing_time
             else:
                 # If this activity has no estimated times set as instant activity
                 self.event_log.loc[index, self.config.log_ids.start_timestamp] = self.event_log.loc[
@@ -154,7 +157,9 @@ class StartTimeEstimator:
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_event_log()
-        elif self.config.re_estimation_method == ReEstimationMethod.MODE:
+        elif (self.config.re_estimation_method == ReEstimationMethod.MODE or
+              self.config.re_estimation_method == ReEstimationMethod.MEDIAN or
+              self.config.re_estimation_method == ReEstimationMethod.MEAN):
             estimated_event_log = self._re_estimate_non_estimated_start_times_event_log()
         else:
             print("Unselected fix method for events with no estimated start time! Setting them as instant by default.")
@@ -177,7 +182,7 @@ class StartTimeEstimator:
         # Identify events with non_estimated as start time
         # and store the durations of the estimated ones
         non_estimated_events = []
-        activity_times = {}
+        activity_processing_times = {}
         for trace in self.event_log:
             for event in trace:
                 if event[self.config.log_ids.start_timestamp] == self.config.non_estimated_time:
@@ -187,17 +192,26 @@ class StartTimeEstimator:
                     # Estimated, store estimated time to calculate statistics
                     activity = event[self.config.log_ids.activity]
                     processing_time = event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]
-                    if activity not in activity_times:
-                        activity_times[activity] = [processing_time]
+                    if activity not in activity_processing_times:
+                        activity_processing_times[activity] = [processing_time]
                     else:
-                        activity_times[activity] += [processing_time]
+                        activity_processing_times[activity] += [processing_time]
         # Set as start time the end time - the mode of the processing times (most frequent processing time)
         for event in non_estimated_events:
             activity = event[self.config.log_ids.activity]
-            if activity in activity_times:
-                event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - mode(activity_times[activity])
+            if activity in activity_processing_times:
+                processing_time = self._get_processing_time(activity_processing_times[activity])
+                event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - processing_time
             else:
                 # If this activity has no estimated times set as instant activity
                 event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp]
         # Return modified event log
         return self.event_log
+
+    def _get_processing_time(self, activity_processing_times):
+        if self.config.re_estimation_method == ReEstimationMethod.MODE:
+            return mode(activity_processing_times)
+        elif self.config.re_estimation_method == ReEstimationMethod.MEDIAN:
+            return np.median(activity_processing_times)
+        elif self.config.re_estimation_method == ReEstimationMethod.MEAN:
+            return np.mean(activity_processing_times)

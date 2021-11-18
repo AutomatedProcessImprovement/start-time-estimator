@@ -8,6 +8,8 @@ import pytz
 class ReEstimationMethod(enum.Enum):
     SET_INSTANT = 1
     MODE = 2
+    MEDIAN = 3
+    MEAN = 4
 
 
 class ConcurrencyOracleType(enum.Enum):
