@@ -233,3 +233,53 @@ def test_set_median_non_estimated_start_times_el():
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=13.5)
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == \
            extended_event_log[1][1][config.log_ids.end_timestamp] - timedelta(minutes=25)
+
+
+def test_get_processing_time():
+    processing_times = {
+        'A': [timedelta(2), timedelta(2), timedelta(4), timedelta(6), timedelta(7), timedelta(9)],
+        'B': [timedelta(2), timedelta(2), timedelta(4), timedelta(8)],
+        'C': [timedelta(2), timedelta(2), timedelta(3)]
+    }
+    # MEAN
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEAN,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
+    )
+    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(5)
+    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(4)
+    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(days=2, hours=8)
+    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)
+    # MEDIAN
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
+    )
+    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(5)
+    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(3)
+    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(2)
+    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)
+    # MODE
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MODE,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
+    )
+    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(2)
+    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(2)
+    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(2)
+    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)

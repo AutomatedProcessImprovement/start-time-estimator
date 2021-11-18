@@ -1,3 +1,4 @@
+from datetime import timedelta
 from statistics import mode
 from typing import Union
 
@@ -82,13 +83,8 @@ class StartTimeEstimator:
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_data_frame()
-        elif (self.config.re_estimation_method == ReEstimationMethod.MODE or
-              self.config.re_estimation_method == ReEstimationMethod.MEDIAN or
-              self.config.re_estimation_method == ReEstimationMethod.MEAN):
-            estimated_event_log = self._re_estimate_non_estimated_start_times_data_frame()
         else:
-            print("Unselected re-estimation method for events with no estimated start time! Setting them as instant by default.")
-            estimated_event_log = self._set_instant_non_estimated_start_times_data_frame()
+            estimated_event_log = self._re_estimate_non_estimated_start_times_data_frame()
         # Return modified event log
         return estimated_event_log
 
@@ -103,14 +99,6 @@ class StartTimeEstimator:
         # Return modified event log
         return self.event_log
 
-    def _get_processing_time(self, activity_processing_times):
-        if self.config.re_estimation_method == ReEstimationMethod.MODE:
-            return mode(activity_processing_times)
-        elif self.config.re_estimation_method == ReEstimationMethod.MEDIAN:
-            return np.median(activity_processing_times)
-        elif self.config.re_estimation_method == ReEstimationMethod.MEAN:
-            return np.mean(activity_processing_times)
-
     def _re_estimate_non_estimated_start_times_data_frame(self) -> pd.DataFrame:
         # Store the durations of the estimated ones
         activity_processing_times = self.event_log[self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
@@ -121,13 +109,9 @@ class StartTimeEstimator:
         for index, non_estimated_event in non_estimated_events.iterrows():
             activity = non_estimated_event[self.config.log_ids.activity]
             if activity in activity_processing_times:
-                processing_time = self._get_processing_time(activity_processing_times[activity])
+                processing_time = self._get_processing_time(activity_processing_times, activity)
                 self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
                     non_estimated_event[self.config.log_ids.end_timestamp] - processing_time
-            else:
-                # If this activity has no estimated times set as instant activity
-                self.event_log.loc[index, self.config.log_ids.start_timestamp] = self.event_log.loc[
-                    index, self.config.log_ids.end_timestamp]
         # Return modified event log
         return self.event_log
 
@@ -147,13 +131,8 @@ class StartTimeEstimator:
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_event_log()
-        elif (self.config.re_estimation_method == ReEstimationMethod.MODE or
-              self.config.re_estimation_method == ReEstimationMethod.MEDIAN or
-              self.config.re_estimation_method == ReEstimationMethod.MEAN):
-            estimated_event_log = self._re_estimate_non_estimated_start_times_event_log()
         else:
-            print("Unselected fix method for events with no estimated start time! Setting them as instant by default.")
-            estimated_event_log = self._set_instant_non_estimated_start_times_event_log()
+            estimated_event_log = self._re_estimate_non_estimated_start_times_event_log()
         # Return modified event log
         return estimated_event_log
 
@@ -186,14 +165,26 @@ class StartTimeEstimator:
                         activity_processing_times[activity] = [processing_time]
                     else:
                         activity_processing_times[activity] += [processing_time]
-        # Set as start time the end time - the mode of the processing times (most frequent processing time)
+        # Set as start time the end time minus a statistic of the processing times (mean/mode/median)
         for event in non_estimated_events:
             activity = event[self.config.log_ids.activity]
             if activity in activity_processing_times:
-                processing_time = self._get_processing_time(activity_processing_times[activity])
+                processing_time = self._get_processing_time(activity_processing_times, activity)
                 event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - processing_time
-            else:
-                # If this activity has no estimated times set as instant activity
-                event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp]
         # Return modified event log
         return self.event_log
+
+    def _get_processing_time(self, activity_processing_times, activity):
+        if activity in activity_processing_times:
+            # There have been measured other processing times for the activity, take specified statistic
+            if self.config.re_estimation_method == ReEstimationMethod.MODE:
+                return mode(activity_processing_times[activity])
+            elif self.config.re_estimation_method == ReEstimationMethod.MEDIAN:
+                return np.median(activity_processing_times[activity])
+            elif self.config.re_estimation_method == ReEstimationMethod.MEAN:
+                return np.mean(activity_processing_times[activity])
+            else:
+                raise ValueError("Unselected re-estimation method for events with non-estimated start time!")
+        else:
+            # There are not other measures for the processing times of the activity, set instant (processing time = 0)
+            return timedelta(0)
