@@ -1,14 +1,14 @@
 from datetime import datetime
 
 from config import Configuration
-from data_frame.resource_availability import ResourceAvailability
+from data_frame.resource_availability import SimpleResourceAvailability
 from event_log_readers import read_csv_log
 
 
 def test_resource_availability():
     config = Configuration()
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
-    resource_availability = ResourceAvailability(event_log, config)
+    resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded
@@ -46,7 +46,7 @@ def test_resource_availability():
 def test_resource_availability_bot_resources():
     config = Configuration(bot_resources={'Marcus', 'Dominic'})
     event_log = read_csv_log('../assets/test_event_log_1.csv', config)
-    resource_availability = ResourceAvailability(event_log, config)
+    resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded

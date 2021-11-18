@@ -10,11 +10,11 @@ from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabili
 from data_frame.concurrency_oracle import AlphaConcurrencyOracle as DFAlphaConcurrencyOracle
 from data_frame.concurrency_oracle import HeuristicsConcurrencyOracle as DFHeuristicsConcurrencyOracle
 from data_frame.concurrency_oracle import NoConcurrencyOracle as DFNoConcurrencyOracle
-from data_frame.resource_availability import ResourceAvailability as DFResourceAvailability
+from data_frame.resource_availability import SimpleResourceAvailability as DFSimpleResourceAvailability
 from event_log.concurrency_oracle import AlphaConcurrencyOracle as ELAlphaConcurrencyOracle
 from event_log.concurrency_oracle import HeuristicsConcurrencyOracle as ELHeuristicsConcurrencyOracle
 from event_log.concurrency_oracle import NoConcurrencyOracle as ELNoConcurrencyOracle
-from event_log.resource_availability import ResourceAvailability as ELResourceAvailability
+from event_log.resource_availability import SimpleResourceAvailability as ELSimpleResourceAvailability
 
 
 class StartTimeEstimator:
@@ -38,7 +38,7 @@ class StartTimeEstimator:
                 raise ValueError("No concurrency oracle defined!")
             # Set resource availability
             if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
-                self.resource_availability = ELResourceAvailability(self.event_log, self.config)
+                self.resource_availability = ELSimpleResourceAvailability(self.event_log, self.config)
             else:
                 raise ValueError("No resource availability defined!")
         elif type(self.event_log) is pd.DataFrame:
@@ -54,7 +54,7 @@ class StartTimeEstimator:
                 raise ValueError("No concurrency oracle defined!")
             # Set resource availability
             if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
-                self.resource_availability = DFResourceAvailability(self.event_log, self.config)
+                self.resource_availability = DFSimpleResourceAvailability(self.event_log, self.config)
             else:
                 raise ValueError("No resource availability defined!")
         else:
