@@ -74,12 +74,13 @@ class StartTimeEstimator:
         # Assign start timestamps
         for (key, trace) in self.event_log.groupby([self.config.log_ids.case]):
             for index, event in trace.iterrows():
-                enabled_time = self.concurrency_oracle.enabled_since(trace, event)
-                available_time = self.resource_availability.available_since(
-                    event[self.config.log_ids.resource],
-                    event[self.config.log_ids.end_timestamp]
-                )
-                self.event_log.loc[index, self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
+                if pd.isnull(event[self.config.log_ids.start_timestamp]):
+                    enabled_time = self.concurrency_oracle.enabled_since(trace, event)
+                    available_time = self.resource_availability.available_since(
+                        event[self.config.log_ids.resource],
+                        event[self.config.log_ids.end_timestamp]
+                    )
+                    self.event_log.loc[index, self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_data_frame()
@@ -119,15 +120,13 @@ class StartTimeEstimator:
         # Assign start timestamps
         for trace in self.event_log:
             for event in trace:
-                enabled_time = self.concurrency_oracle.enabled_since(trace, event)
-                available_time = self.resource_availability.available_since(
-                    event[self.config.log_ids.resource],
-                    event[self.config.log_ids.end_timestamp]
-                )
-                event[self.config.log_ids.start_timestamp] = max(
-                    enabled_time,
-                    available_time
-                )
+                if self.config.log_ids.start_timestamp not in event:
+                    enabled_time = self.concurrency_oracle.enabled_since(trace, event)
+                    available_time = self.resource_availability.available_since(
+                        event[self.config.log_ids.resource],
+                        event[self.config.log_ids.end_timestamp]
+                    )
+                    event[self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             estimated_event_log = self._set_instant_non_estimated_start_times_event_log()

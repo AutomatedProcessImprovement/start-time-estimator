@@ -1,6 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
+import pandas as pd
+
 from config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ResourceAvailabilityType
 from estimate_start_times.estimate_start_times import StartTimeEstimator
 from event_log_readers import read_csv_log, read_xes_log
@@ -13,6 +15,13 @@ def test_estimate_start_times_instant_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    # Set one start timestamp manually
+    manually_added_timestamp = pd.to_datetime('2002-11-07 12:33:00+02:00', format='%Y-%m-%d %H:%M:%S%z', utc=True)
+    event_log.loc[
+        (event_log[config.log_ids.case] == 'trace-01') & (event_log[config.log_ids.activity] == 'C'),
+        config.log_ids.start_timestamp
+    ] = manually_added_timestamp
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the end time (instant events)
@@ -30,6 +39,8 @@ def test_estimate_start_times_instant_df():
     # busy in other activities is the end time of its resource's last activity.
     assert fourth_trace.iloc[3][config.log_ids.start_timestamp] == third_trace.iloc[2][config.log_ids.end_timestamp]
     assert fourth_trace.iloc[4][config.log_ids.start_timestamp] == second_trace.iloc[4][config.log_ids.end_timestamp]
+    # The event with predefined start time was not predicted
+    assert first_trace.iloc[2][config.log_ids.start_timestamp] == manually_added_timestamp
 
 
 def test_estimate_start_times_instant_el():
@@ -40,6 +51,10 @@ def test_estimate_start_times_instant_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    # Set one start timestamp manually
+    manually_added_timestamp = datetime.strptime('2002-11-07 12:33:00+02:00', '%Y-%m-%d %H:%M:%S%z')
+    event_log[0][2][config.log_ids.start_timestamp] = manually_added_timestamp
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the end time (instant events)
@@ -53,6 +68,8 @@ def test_estimate_start_times_instant_el():
     # busy in other activities is the end time of its resource's last activity.
     assert extended_event_log[3][3][config.log_ids.start_timestamp] == event_log[2][2][config.log_ids.end_timestamp]
     assert extended_event_log[3][4][config.log_ids.start_timestamp] == event_log[1][4][config.log_ids.end_timestamp]
+    # The event with predefined start time was not predicted
+    assert extended_event_log[0][2][config.log_ids.start_timestamp] == manually_added_timestamp
 
 
 def test_estimate_start_times_mode_df():
@@ -62,6 +79,7 @@ def test_estimate_start_times_mode_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the most frequent processing time
@@ -82,6 +100,7 @@ def test_estimate_start_times_mode_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
     # The start time of initial events is the most frequent processing time
@@ -98,7 +117,8 @@ def test_set_instant_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._set_instant_non_estimated_start_times_data_frame()
     # The start time of non-estimated events is the end time (instant events)
@@ -117,6 +137,7 @@ def test_set_instant_non_estimated_start_times_el():
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._set_instant_non_estimated_start_times_event_log()
     # The start time of non-estimated events is the end time (instant events)
@@ -131,7 +152,8 @@ def test_set_mode_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_data_frame()
     # The start time of non-estimated events is the most frequent processing time
@@ -152,6 +174,7 @@ def test_set_mode_non_estimated_start_times_el():
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_event_log()
     # The start time of non-estimated events is the most frequent processing time
@@ -168,7 +191,8 @@ def test_set_mean_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_data_frame()
     # The start time of non-estimated events is the most frequent processing time
@@ -189,6 +213,7 @@ def test_set_mean_non_estimated_start_times_el():
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_event_log()
     # The start time of non-estimated events is the most frequent processing time
@@ -205,7 +230,8 @@ def test_set_median_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_data_frame()
     # The start time of non-estimated events is the most frequent processing time
@@ -226,6 +252,7 @@ def test_set_median_non_estimated_start_times_el():
         non_estimated_time=datetime.strptime('2000-01-01T10:00:00.000+02:00', '%Y-%m-%dT%H:%M:%S.%f%z')
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times_event_log()
     # The start time of non-estimated events is the most frequent processing time

@@ -34,7 +34,7 @@ def read_xes_log(log_path, config) -> EventLog:
     return event_log
 
 
-def read_csv_log(log_path, config) -> pd.DataFrame:
+def read_csv_log(log_path, config, reset_start_times=True) -> pd.DataFrame:
     # Read log
     event_log = pd.read_csv(log_path)
     # If the events have a lifecycle, retain only 'complete'
@@ -47,9 +47,12 @@ def read_csv_log(log_path, config) -> pd.DataFrame:
         event_log[config.log_ids.resource] = config.missing_resource
     else:
         event_log[config.log_ids.resource].fillna(config.missing_resource, inplace=True)
-    # Convert timestamp values to datetime
+    # Convert timestamp value to datetime
     event_log[config.log_ids.end_timestamp] = pd.to_datetime(event_log[config.log_ids.end_timestamp], utc=True)
-    if config.log_ids.start_timestamp in event_log.columns:
+    # Set as NaT the start time
+    if reset_start_times:
+        event_log[config.log_ids.start_timestamp] = pd.NaT
+    else:
         event_log[config.log_ids.start_timestamp] = pd.to_datetime(event_log[config.log_ids.start_timestamp], utc=True)
     # Sort by end time
     event_log = event_log.sort_values(config.log_ids.end_timestamp)
