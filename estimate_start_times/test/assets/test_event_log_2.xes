@@ -96,4 +96,28 @@
 				<date key="time:timestamp" value="2006-11-07T13:16:00.000+02:00"/>
 			</event>
 		</trace>
+		<trace>
+			<string key="concept:name" value="trace-04"/>
+			<event>
+				<string key="org:resource" value="Marcus"/>
+				<string key="lifecycle:transition" value="complete"/>
+				<string key="concept:name" value="A"/>
+				<date key="time:start" value="2006-11-07 13:20:00+02:00"/>
+				<date key="time:timestamp" value="2006-11-07 13:32:00+02:00"/>
+			</event>
+			<event>
+				<string key="org:resource" value="Marcus"/>
+				<string key="lifecycle:transition" value="complete"/>
+				<string key="concept:name" value="B"/>
+				<date key="time:start" value="2006-11-07 13:35:00+02:00"/>
+				<date key="time:timestamp" value="2006-11-07 13:53:00+02:00"/>
+			</event>
+			<event>
+				<string key="org:resource" value="Marcus"/>
+				<string key="lifecycle:transition" value="complete"/>
+				<string key="concept:name" value="C"/>
+				<date key="time:start" value="2006-11-07 13:55:00+02:00"/>
+				<date key="time:timestamp" value="2006-11-07 13:59:00+02:00"/>
+			</event>
+		</trace>
 </log>
