@@ -183,7 +183,8 @@ def test_set_instant_non_estimated_start_times_df():
     event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._set_instant_non_estimated_start_times()
+    start_time_estimator._set_instant_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == first_trace.iloc[0][config.log_ids.end_timestamp]
@@ -202,7 +203,8 @@ def test_set_instant_non_estimated_start_times_el():
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._set_instant_non_estimated_start_times()
+    start_time_estimator._set_instant_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the end time (instant events)
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == extended_event_log[0][0][config.log_ids.end_timestamp]
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == extended_event_log[1][1][config.log_ids.end_timestamp]
@@ -218,7 +220,8 @@ def test_set_mode_non_estimated_start_times_df():
     event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
@@ -239,7 +242,8 @@ def test_set_mode_non_estimated_start_times_el():
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=15)
@@ -257,7 +261,8 @@ def test_set_mean_non_estimated_start_times_df():
     event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
@@ -278,7 +283,8 @@ def test_set_mean_non_estimated_start_times_el():
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=13)
@@ -296,7 +302,8 @@ def test_set_median_non_estimated_start_times_df():
     event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
@@ -317,7 +324,8 @@ def test_set_median_non_estimated_start_times_el():
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times()
+    extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent processing time
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=13.5)
