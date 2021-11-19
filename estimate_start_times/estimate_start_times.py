@@ -89,38 +89,11 @@ class StartTimeEstimator:
                     self.event_log.loc[index, self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Fix start times for those events being the first one of the trace and the resource (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
-            estimated_event_log = self._set_instant_non_estimated_start_times_data_frame()
+            estimated_event_log = self._set_instant_non_estimated_start_times()
         else:
-            estimated_event_log = self._re_estimate_non_estimated_start_times_data_frame()
+            estimated_event_log = self._re_estimate_non_estimated_start_times()
         # Return modified event log
         return estimated_event_log
-
-    def _set_instant_non_estimated_start_times_data_frame(self) -> pd.DataFrame:
-        # Identify events with non_estimated as start time
-        # and set their processing time to instant
-        self.event_log[self.config.log_ids.start_timestamp] = np.where(
-            self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time,
-            self.event_log[self.config.log_ids.end_timestamp],
-            self.event_log[self.config.log_ids.start_timestamp]
-        )
-        # Return modified event log
-        return self.event_log
-
-    def _re_estimate_non_estimated_start_times_data_frame(self) -> pd.DataFrame:
-        # Store the durations of the estimated ones
-        activity_processing_times = self.event_log[self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
-            .groupby([self.config.log_ids.activity]) \
-            .apply(lambda row: row[self.config.log_ids.end_timestamp] - row[self.config.log_ids.start_timestamp])
-        # Identify events with non_estimated as start time
-        non_estimated_events = self.event_log[self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time]
-        for index, non_estimated_event in non_estimated_events.iterrows():
-            activity = non_estimated_event[self.config.log_ids.activity]
-            if activity in activity_processing_times:
-                processing_time = self._get_processing_time(activity_processing_times, activity)
-                self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
-                    non_estimated_event[self.config.log_ids.end_timestamp] - processing_time
-        # Return modified event log
-        return self.event_log
 
     def _estimate_event_log(self) -> EventLog:
         # Assign start timestamps
@@ -139,47 +112,67 @@ class StartTimeEstimator:
                     event[self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Fix start times for those events for which it could not be estimated (with non_estimated_time)
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
-            estimated_event_log = self._set_instant_non_estimated_start_times_event_log()
+            estimated_event_log = self._set_instant_non_estimated_start_times()
         else:
-            estimated_event_log = self._re_estimate_non_estimated_start_times_event_log()
+            estimated_event_log = self._re_estimate_non_estimated_start_times()
         # Return modified event log
         return estimated_event_log
 
-    def _set_instant_non_estimated_start_times_event_log(self) -> EventLog:
+    def _set_instant_non_estimated_start_times(self) -> Union[EventLog, pd.DataFrame]:
         # Identify events with non_estimated as start time
         # and set their processing time to instant
-        for trace in self.event_log:
-            for event in trace:
-                if event[self.config.log_ids.start_timestamp] == self.config.non_estimated_time:
-                    # Non-estimated, save event to estimate based on statistics
-                    event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp]
+        if self.event_log_type == EventLogType.DATA_FRAME:
+            self.event_log[self.config.log_ids.start_timestamp] = np.where(
+                self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time,
+                self.event_log[self.config.log_ids.end_timestamp],
+                self.event_log[self.config.log_ids.start_timestamp]
+            )
+        elif self.event_log_type == EventLogType.EVENT_LOG:
+            for trace in self.event_log:
+                for event in trace:
+                    if event[self.config.log_ids.start_timestamp] == self.config.non_estimated_time:
+                        event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp]
         # Return modified event log
         return self.event_log
 
-    def _re_estimate_non_estimated_start_times_event_log(self) -> EventLog:
-        # Identify events with non_estimated as start time
-        # and store the durations of the estimated ones
-        non_estimated_events = []
-        activity_processing_times = {}
-        for trace in self.event_log:
-            for event in trace:
-                if event[self.config.log_ids.start_timestamp] == self.config.non_estimated_time:
-                    # Non-estimated, save event to estimate based on statistics
-                    non_estimated_events += [event]
-                else:
-                    # Estimated, store estimated time to calculate statistics
-                    activity = event[self.config.log_ids.activity]
-                    processing_time = event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]
-                    if activity not in activity_processing_times:
-                        activity_processing_times[activity] = [processing_time]
+    def _re_estimate_non_estimated_start_times(self) -> Union[EventLog, pd.DataFrame]:
+        if self.event_log_type == EventLogType.DATA_FRAME:
+            # Store the durations of the estimated ones
+            activity_processing_times = self.event_log[
+                self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
+                .groupby([self.config.log_ids.activity]) \
+                .apply(lambda row: row[self.config.log_ids.end_timestamp] - row[self.config.log_ids.start_timestamp])
+            # Identify events with non_estimated as start time
+            non_estimated_events = self.event_log[self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time]
+            for index, non_estimated_event in non_estimated_events.iterrows():
+                activity = non_estimated_event[self.config.log_ids.activity]
+                if activity in activity_processing_times:
+                    processing_time = self._get_processing_time(activity_processing_times, activity)
+                    self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
+                        non_estimated_event[self.config.log_ids.end_timestamp] - processing_time
+        elif self.event_log_type == EventLogType.EVENT_LOG:
+            # Store the durations of the estimated ones
+            non_estimated_events = []
+            activity_processing_times = {}
+            for trace in self.event_log:
+                for event in trace:
+                    if event[self.config.log_ids.start_timestamp] == self.config.non_estimated_time:
+                        # Non-estimated, save event to estimate based on statistics
+                        non_estimated_events += [event]
                     else:
-                        activity_processing_times[activity] += [processing_time]
-        # Set as start time the end time minus a statistic of the processing times (mean/mode/median)
-        for event in non_estimated_events:
-            activity = event[self.config.log_ids.activity]
-            if activity in activity_processing_times:
-                processing_time = self._get_processing_time(activity_processing_times, activity)
-                event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - processing_time
+                        # Estimated, store estimated time to calculate statistics
+                        activity = event[self.config.log_ids.activity]
+                        processing_time = event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]
+                        if activity not in activity_processing_times:
+                            activity_processing_times[activity] = [processing_time]
+                        else:
+                            activity_processing_times[activity] += [processing_time]
+            # Set as start time the end time minus a statistic of the processing times (mean/mode/median)
+            for event in non_estimated_events:
+                activity = event[self.config.log_ids.activity]
+                if activity in activity_processing_times:
+                    processing_time = self._get_processing_time(activity_processing_times, activity)
+                    event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - processing_time
         # Return modified event log
         return self.event_log
 
