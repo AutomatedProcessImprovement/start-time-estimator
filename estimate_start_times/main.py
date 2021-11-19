@@ -6,7 +6,8 @@ from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.obj import EventLog
 
-from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, HeuristicsThresholds
+from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
+    HeuristicsThresholds
 from estimate_start_times import StartTimeEstimator
 from event_log_readers import read_event_log
 
@@ -30,14 +31,14 @@ def run_estimation(event_log_path, configuration, extension):
         extended_event_log = log_converter \
             .apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME) \
             .rename(
-                columns={
-                    'case:{}'.format(configuration.log_ids.case): 'case:concept:name',
-                    configuration.log_ids.activity: 'concept:name',
-                    configuration.log_ids.start_timestamp: 'time:start',
-                    configuration.log_ids.end_timestamp: 'time:timestamp',
-                    configuration.log_ids.resource: 'org:resource'
-                }
-            )
+            columns={
+                'case:{}'.format(configuration.log_ids.case): 'case:concept:name',
+                configuration.log_ids.activity: 'concept:name',
+                configuration.log_ids.start_timestamp: 'time:start',
+                configuration.log_ids.end_timestamp: 'time:timestamp',
+                configuration.log_ids.resource: 'org:resource'
+            }
+        )
     elif type(extended_event_log) is pd.DataFrame:
         # Rename the columns to fit SIMOD format
         extended_event_log = extended_event_log.rename(
@@ -65,7 +66,8 @@ def run_estimation(event_log_path, configuration, extension):
         .sort_values(by=['time:timestamp', 'index', 'lifecycle:transition'], ascending=[True, True, False])
     # Unify date format to 'yyyy-mm-ddThh:mm:ss.sss+zz:zz' (chapuza)
     extended_event_log['time:timestamp'] = \
-        extended_event_log['time:timestamp'].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
+        extended_event_log['time:timestamp'].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(
+            lambda x: x[:-3]) + \
         extended_event_log['time:timestamp'].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
         ":" + \
         extended_event_log['time:timestamp'].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
@@ -88,7 +90,7 @@ def change_string_by_date(file_path):
     os.remove(file_path)
 
 
-if __name__ == '__main__':
+def main():
     # Consulta Data Mining 2016 - 2018
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
@@ -119,3 +121,7 @@ if __name__ == '__main__':
         heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
     )
     run_estimation("../event_logs/cvs_pharmacy.xes.gz", config, ".xes.gz")
+
+
+if __name__ == '__main__':
+    main()
