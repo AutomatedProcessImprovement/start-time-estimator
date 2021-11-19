@@ -145,7 +145,7 @@ def test_estimate_start_times_mode_df():
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
-    # The start time of initial events is the most frequent processing time
+    # The start time of initial events is the most frequent duration
     third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == first_trace.iloc[0][config.log_ids.end_timestamp] - \
@@ -166,7 +166,7 @@ def test_estimate_start_times_mode_el():
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
-    # The start time of initial events is the most frequent processing time
+    # The start time of initial events is the most frequent duration
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == extended_event_log[0][0][config.log_ids.end_timestamp] - \
            (extended_event_log[2][0][config.log_ids.end_timestamp] - extended_event_log[0][0][config.log_ids.end_timestamp])
     assert extended_event_log[1][0][config.log_ids.start_timestamp] == extended_event_log[1][0][config.log_ids.end_timestamp] - \
@@ -222,7 +222,7 @@ def test_set_mode_non_estimated_start_times_df():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
            first_trace.iloc[0][config.log_ids.end_timestamp] - timedelta(minutes=15)
@@ -244,7 +244,7 @@ def test_set_mode_non_estimated_start_times_el():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=15)
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == \
@@ -263,7 +263,7 @@ def test_set_mean_non_estimated_start_times_df():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
            first_trace.iloc[0][config.log_ids.end_timestamp] - timedelta(minutes=13)
@@ -285,7 +285,7 @@ def test_set_mean_non_estimated_start_times_el():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=13)
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == \
@@ -304,7 +304,7 @@ def test_set_median_non_estimated_start_times_df():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_timestamp] == \
            first_trace.iloc[0][config.log_ids.end_timestamp] - timedelta(minutes=13.5)
@@ -326,15 +326,15 @@ def test_set_median_non_estimated_start_times_el():
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
     extended_event_log = start_time_estimator.event_log
-    # The start time of non-estimated events is the most frequent processing time
+    # The start time of non-estimated events is the most frequent duration
     assert extended_event_log[0][0][config.log_ids.start_timestamp] == \
            extended_event_log[0][0][config.log_ids.end_timestamp] - timedelta(minutes=13.5)
     assert extended_event_log[1][1][config.log_ids.start_timestamp] == \
            extended_event_log[1][1][config.log_ids.end_timestamp] - timedelta(minutes=25)
 
 
-def test_get_processing_time():
-    processing_times = {
+def test_get_activity_duration():
+    durations = {
         'A': [timedelta(2), timedelta(2), timedelta(4), timedelta(6), timedelta(7), timedelta(9)],
         'B': [timedelta(2), timedelta(2), timedelta(4), timedelta(8)],
         'C': [timedelta(2), timedelta(2), timedelta(3)]
@@ -349,10 +349,10 @@ def test_get_processing_time():
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(5)
-    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(4)
-    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(days=2, hours=8)
-    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
+    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(4)
+    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(days=2, hours=8)
+    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
     # MEDIAN
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
@@ -363,10 +363,10 @@ def test_get_processing_time():
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(5)
-    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(3)
-    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(2)
-    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
+    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(3)
+    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
     # MODE
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
@@ -377,7 +377,7 @@ def test_get_processing_time():
     )
     event_log = read_xes_log('./assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_processing_time(processing_times, 'A') == timedelta(2)
-    assert start_time_estimator._get_processing_time(processing_times, 'B') == timedelta(2)
-    assert start_time_estimator._get_processing_time(processing_times, 'C') == timedelta(2)
-    assert start_time_estimator._get_processing_time(processing_times, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
