@@ -72,6 +72,69 @@ def test_estimate_start_times_instant_el():
     assert extended_event_log[0][2][config.log_ids.start_timestamp] == manually_added_timestamp
 
 
+def test_bot_resources_and_instant_activities_df():
+    config = Configuration(
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        bot_resources={'Marcus'},
+        instant_activities={'H', 'I'}
+    )
+    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    # Estimate start times
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
+    # The events performed by bot resources, or being instant activities are instant
+    second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
+    fourth_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-04']
+    assert second_trace.iloc[2][config.log_ids.start_timestamp] == second_trace.iloc[2][config.log_ids.end_timestamp]
+    assert fourth_trace.iloc[6][config.log_ids.start_timestamp] == fourth_trace.iloc[6][config.log_ids.end_timestamp]
+    assert fourth_trace.iloc[7][config.log_ids.start_timestamp] == fourth_trace.iloc[7][config.log_ids.end_timestamp]
+    # The start time of initial events (with no bot resources nor instant activities) is the end time (instant events)
+    assert second_trace.iloc[0][config.log_ids.start_timestamp] == second_trace.iloc[0][config.log_ids.end_timestamp]
+    assert fourth_trace.iloc[0][config.log_ids.start_timestamp] == fourth_trace.iloc[0][config.log_ids.end_timestamp]
+    # The start time of an event (no bot resource nor instant activity) with its resource
+    # free but immediately following its previous one is the end time of the previous one.
+    second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
+    assert second_trace.iloc[3][config.log_ids.start_timestamp] == second_trace.iloc[2][config.log_ids.end_timestamp]
+    third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
+    assert third_trace.iloc[3][config.log_ids.start_timestamp] == third_trace.iloc[2][config.log_ids.end_timestamp]
+    # The start time of an event (no bot resource nor instant activity) enabled for a long time
+    # but with its resource busy in other activities is the end time of its resource's last activity.
+    assert fourth_trace.iloc[3][config.log_ids.start_timestamp] == third_trace.iloc[2][config.log_ids.end_timestamp]
+    assert fourth_trace.iloc[4][config.log_ids.start_timestamp] == second_trace.iloc[4][config.log_ids.end_timestamp]
+
+
+def test_bot_resources_and_instant_activities_el():
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.SET_INSTANT,
+        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        bot_resources={'Marcus'},
+        instant_activities={'H', 'I'}
+    )
+    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    # Estimate start times
+    start_time_estimator = StartTimeEstimator(event_log, config)
+    extended_event_log = start_time_estimator.estimate()
+    # The events performed by bot resources, or being instant activities are instant
+    assert extended_event_log[1][2][config.log_ids.start_timestamp] == extended_event_log[1][2][config.log_ids.end_timestamp]
+    assert extended_event_log[3][6][config.log_ids.start_timestamp] == extended_event_log[3][6][config.log_ids.end_timestamp]
+    assert extended_event_log[3][7][config.log_ids.start_timestamp] == extended_event_log[3][7][config.log_ids.end_timestamp]
+    # The start time of initial events is the end time (instant events)
+    assert extended_event_log[1][0][config.log_ids.start_timestamp] == extended_event_log[1][0][config.log_ids.end_timestamp]
+    assert extended_event_log[3][0][config.log_ids.start_timestamp] == extended_event_log[3][0][config.log_ids.end_timestamp]
+    # The start time of an event with its resource free but immediately
+    # following its previous one is the end time of the previous one.
+    assert extended_event_log[1][3][config.log_ids.start_timestamp] == event_log[1][2][config.log_ids.end_timestamp]
+    assert extended_event_log[2][3][config.log_ids.start_timestamp] == event_log[2][2][config.log_ids.end_timestamp]
+    # The start time of an event enabled for a long time but with its resource
+    # busy in other activities is the end time of its resource's last activity.
+    assert extended_event_log[3][3][config.log_ids.start_timestamp] == event_log[2][2][config.log_ids.end_timestamp]
+    assert extended_event_log[3][4][config.log_ids.start_timestamp] == event_log[1][4][config.log_ids.end_timestamp]
+
+
 def test_estimate_start_times_mode_df():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
