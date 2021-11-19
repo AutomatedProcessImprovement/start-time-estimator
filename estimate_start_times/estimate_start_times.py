@@ -1,3 +1,4 @@
+import math
 from datetime import timedelta
 from statistics import mode
 from typing import Union
@@ -7,7 +8,7 @@ import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
 from common import EventLogType
-from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType
+from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from data_frame.concurrency_oracle import AlphaConcurrencyOracle as DFAlphaConcurrencyOracle
 from data_frame.concurrency_oracle import HeuristicsConcurrencyOracle as DFHeuristicsConcurrencyOracle
 from data_frame.concurrency_oracle import NoConcurrencyOracle as DFNoConcurrencyOracle
@@ -88,6 +89,9 @@ class StartTimeEstimator:
                         event[self.config.log_ids.end_timestamp]
                     )
                     self.event_log.loc[index, self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
+        # Re-estimate start time of those events with an estimated duration over the threshold
+        if not math.isnan(self.config.outlier_threshold):
+            self._re_estimate_durations_over_threshold()
         # Fix start time of those events for which it could not be estimated (with [config.non_estimated_time])
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             self._set_instant_non_estimated_start_times()
@@ -109,11 +113,54 @@ class StartTimeEstimator:
                         event[self.config.log_ids.end_timestamp]
                     )
                     event[self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
+        # Re-estimate start time of those events with an estimated duration over the threshold
+        if not math.isnan(self.config.outlier_threshold):
+            self._re_estimate_durations_over_threshold()
         # Fix start time of those events for which it could not be estimated (with [config.non_estimated_time])
         if self.config.re_estimation_method == ReEstimationMethod.SET_INSTANT:
             self._set_instant_non_estimated_start_times()
         else:
             self._re_estimate_non_estimated_start_times()
+
+    def _re_estimate_durations_over_threshold(self):
+        if self.event_log_type == EventLogType.DATA_FRAME:
+            # Take all the estimated durations of each activity and store the specified statistic of each distribution
+            statistic_durations = \
+                self.event_log[self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
+                    .groupby([self.config.log_ids.activity]) \
+                    .apply(lambda row: row[self.config.log_ids.end_timestamp] - row[self.config.log_ids.start_timestamp]) \
+                    .groupby(level=0) \
+                    .apply(lambda row: self._apply_statistic(row))
+            # For each event, if the duration is over the threshold, set the defined statistic
+            for index, event in self.event_log.iterrows():
+                duration_limit = self.config.outlier_threshold * statistic_durations[event[self.config.log_ids.activity]]
+                if (event[self.config.log_ids.start_timestamp] != self.config.non_estimated_time and
+                        (event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]) > duration_limit):
+                    self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
+                        event[self.config.log_ids.end_timestamp] - duration_limit
+        elif self.event_log_type == EventLogType.EVENT_LOG:
+            # Take all the estimated durations of each activity
+            statistic_durations = {}
+            for trace in self.event_log:
+                for event in trace:
+                    if event[self.config.log_ids.start_timestamp] != self.config.non_estimated_time:
+                        # Store estimated time to calculate statistics
+                        activity = event[self.config.log_ids.activity]
+                        duration = event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]
+                        statistic_durations[activity] = statistic_durations.get(activity, []) + [duration]
+            # Store, for each activity, the mean/median/mode of its estimated durations
+            for activity in statistic_durations:
+                statistic_durations[activity] = self._apply_statistic(statistic_durations[activity])
+            # For each event, if the duration is over the threshold, set the defined statistic
+            for trace in self.event_log:
+                for event in trace:
+                    if event[self.config.log_ids.start_timestamp] != self.config.non_estimated_time:
+                        activity = event[self.config.log_ids.activity]
+                        duration = event[self.config.log_ids.end_timestamp] - event[self.config.log_ids.start_timestamp]
+                        duration_limit = self.config.outlier_threshold * statistic_durations[activity]
+                        if duration > duration_limit:
+                            # Set statistic
+                            event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - duration_limit
 
     def _set_instant_non_estimated_start_times(self):
         # Identify events with non_estimated as start time
@@ -133,10 +180,10 @@ class StartTimeEstimator:
     def _re_estimate_non_estimated_start_times(self):
         if self.event_log_type == EventLogType.DATA_FRAME:
             # Store the durations of the estimated ones
-            activity_durations = self.event_log[
-                self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
-                .groupby([self.config.log_ids.activity]) \
-                .apply(lambda row: row[self.config.log_ids.end_timestamp] - row[self.config.log_ids.start_timestamp])
+            activity_durations = \
+                self.event_log[self.event_log[self.config.log_ids.start_timestamp] != self.config.non_estimated_time] \
+                    .groupby([self.config.log_ids.activity]) \
+                    .apply(lambda row: row[self.config.log_ids.end_timestamp] - row[self.config.log_ids.start_timestamp])
             # Identify events with non_estimated as start time
             non_estimated_events = self.event_log[self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time]
             for index, non_estimated_event in non_estimated_events.iterrows():
@@ -183,3 +230,13 @@ class StartTimeEstimator:
         else:
             # There are not other measures for the durations of the activity, set instant (duration = 0)
             return timedelta(0)
+
+    def _apply_statistic(self, durations):
+        if self.config.outlier_statistic == OutlierStatistic.MODE:
+            return mode(durations)
+        elif self.config.outlier_statistic == OutlierStatistic.MEDIAN:
+            return np.median(durations)
+        elif self.config.outlier_statistic == OutlierStatistic.MEAN:
+            return np.mean(durations)
+        else:
+            raise ValueError("Unselected outlier statistic for events with estimated duration over the established!")

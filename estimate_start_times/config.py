@@ -12,6 +12,12 @@ class ReEstimationMethod(enum.Enum):
     MEAN = 4
 
 
+class OutlierStatistic(enum.Enum):
+    MODE = 1
+    MEDIAN = 2
+    MEAN = 3
+
+
 class ConcurrencyOracleType(enum.Enum):
     NONE = 1
     ALPHA = 2
@@ -56,7 +62,9 @@ class Configuration:
     resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
     missing_resource: str = "NOT_SET"
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
-    re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
+    re_estimation_method: ReEstimationMethod = ReEstimationMethod.MEDIAN
     bot_resources: set = field(default_factory=set)
     instant_activities: set = field(default_factory=set)
     heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
+    outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
+    outlier_threshold: float = float('nan')
