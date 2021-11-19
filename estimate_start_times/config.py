@@ -58,4 +58,5 @@ class Configuration:
     non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MODE
     bot_resources: set = field(default_factory=set)
+    instant_activities: set = field(default_factory=set)
     heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
