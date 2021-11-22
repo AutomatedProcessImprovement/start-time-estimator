@@ -31,14 +31,14 @@ def run_estimation(event_log_path, configuration, extension):
         extended_event_log = log_converter \
             .apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME) \
             .rename(
-            columns={
-                'case:{}'.format(configuration.log_ids.case): 'case:concept:name',
-                configuration.log_ids.activity: 'concept:name',
-                configuration.log_ids.start_timestamp: 'time:start',
-                configuration.log_ids.end_timestamp: 'time:timestamp',
-                configuration.log_ids.resource: 'org:resource'
-            }
-        )
+                columns={
+                    'case:{}'.format(configuration.log_ids.case): 'case:concept:name',
+                    configuration.log_ids.activity: 'concept:name',
+                    configuration.log_ids.start_timestamp: 'time:start',
+                    configuration.log_ids.end_timestamp: 'time:timestamp',
+                    configuration.log_ids.resource: 'org:resource'
+                }
+            )
     elif type(extended_event_log) is pd.DataFrame:
         # Rename the columns to fit SIMOD format
         extended_event_log = extended_event_log.rename(
@@ -94,17 +94,18 @@ def main():
     # Consulta Data Mining 2016 - 2018
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
-        re_estimation_method=ReEstimationMethod.MODE,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Start", "End"},
+        instant_activities={"Notificacion estudiante cancelacion soli", "Traer informacion estudiante - banner", "Start", "End"},
         heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
     )
     run_estimation("../event_logs/ConsultaDataMining201618.xes.gz", config, ".xes.gz")
     # Production
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
-        re_estimation_method=ReEstimationMethod.MODE,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Start", "End"},
@@ -114,10 +115,11 @@ def main():
     # CVS Pharmacy
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
-        re_estimation_method=ReEstimationMethod.MODE,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Pharmacy System-000001"},
+        instant_activities={"Prescription fulfilled", "Prescription received", "EVENT 19 END ERROR"},
         heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
     )
     run_estimation("../event_logs/cvs_pharmacy.xes.gz", config, ".xes.gz")
