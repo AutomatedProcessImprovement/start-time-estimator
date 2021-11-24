@@ -7,7 +7,7 @@ from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.obj import EventLog
 
 from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
-    HeuristicsThresholds
+    HeuristicsThresholds, OutlierStatistic
 from estimate_start_times import StartTimeEstimator
 from event_log_readers import read_event_log
 
@@ -98,10 +98,14 @@ def main():
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Start", "End"},
-        instant_activities={"Notificacion estudiante cancelacion soli", "Traer informacion estudiante - banner", "Start", "End"},
-        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
+        # instant_activities={"Notificacion estudiante cancelacion soli", "Traer informacion estudiante - banner", "Start", "End"},
+        instant_activities={"Traer informacion estudiante - banner", "Start", "End"},
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
     )
     run_estimation("../event_logs/ConsultaDataMining201618.xes.gz", config, ".xes.gz")
+
     # Production
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
@@ -109,9 +113,13 @@ def main():
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Start", "End"},
-        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
+        instant_activities={"Start", "End"},
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
     )
     run_estimation("../event_logs/Production.xes.gz", config, ".xes.gz")
+
     # CVS Pharmacy
     config = Configuration(
         log_ids=DEFAULT_XES_IDS,
@@ -120,9 +128,111 @@ def main():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={"Pharmacy System-000001"},
         instant_activities={"Prescription fulfilled", "Prescription received", "EVENT 19 END ERROR"},
-        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9)
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
     )
     run_estimation("../event_logs/cvs_pharmacy.xes.gz", config, ".xes.gz")
+
+    # POC Process Mining
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/poc_processmining.xes.gz", config, ".xes.gz")
+
+    # BPIC 2017
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/BPI_Challenge_2017_W_Two_TS.xes.gz", config, ".xes.gz")
+
+    # Insurance
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/insurance.xes.gz", config, ".xes.gz")
+
+    # Confidential 1000
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        instant_activities={"start", "end", "END1"},
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/confidential_1000.xes.gz", config, ".xes.gz")
+
+    # Confidential 2000
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        instant_activities={"start", "end", "END1"},
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/confidential_2000.xes.gz", config, ".xes.gz")
+
+    # Purchasing Example
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        # instant_activities={"Choose best option", "Send Invoice", "Authorize Supplier's Invoice payment"},
+        instant_activities={"Choose best option"},
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/PurchasingExample.xes.gz", config, ".xes.gz")
+
+    # BPIC 2012
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz", config, ".xes.gz")
+
+    # Call centre
+    config = Configuration(
+        log_ids=DEFAULT_XES_IDS,
+        re_estimation_method=ReEstimationMethod.MEDIAN,
+        concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
+        resource_availability_type=ResourceAvailabilityType.SIMPLE,
+        heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        outlier_statistic=OutlierStatistic.MEDIAN,
+        outlier_threshold=2.0
+    )
+    run_estimation("../event_logs/callcentre.xes.gz", config, ".xes.gz")
 
 
 if __name__ == '__main__':
