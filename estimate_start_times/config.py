@@ -39,7 +39,12 @@ class EventLogIDs:
     lifecycle: str = 'lifecycle'
 
 
-DEFAULT_CSV_IDS = EventLogIDs()
+DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
+                              activity='Activity',
+                              start_timestamp='start_time',
+                              end_timestamp='end_time',
+                              resource='Resource',
+                              lifecycle='Lifecycle')
 DEFAULT_XES_IDS = EventLogIDs(case='concept:name',
                               activity='concept:name',
                               start_timestamp='time:start',
