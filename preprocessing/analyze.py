@@ -31,32 +31,45 @@ def analyze_stats(event_log):
 
 
 def event_log_stats():
-    print("BPI_Challenge_2012_W_Two_TS")
+    print("\nBPI_Challenge_2012_W_Two_TS")
     event_log = pm4py.read_xes("../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("BPI_Challenge_2017_W_Two_TS")
+    print("\nBPI_Challenge_2017_W_Two_TS")
     event_log = pm4py.read_xes("../event_logs/BPI_Challenge_2017_W_Two_TS.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("callcentre")
+    print("\ncallcentre")
     event_log = pm4py.read_xes("../event_logs/callcentre.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("ConsultaDataMining201618")
+    print("\nConsultaDataMining201618")
     event_log = pm4py.read_xes("../event_logs/ConsultaDataMining201618.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("cvs_pharmacy")
+    print("\ncvs_pharmacy")
     event_log = pm4py.read_xes("../event_logs/cvs_pharmacy.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("insurance")
+    print("\ninsurance")
     event_log = pm4py.read_xes("../event_logs/insurance.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("poc_processmining")
+    print("\npoc_processmining")
     event_log = pm4py.read_xes("../event_logs/poc_processmining.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("Production")
+    print("\nProduction")
     event_log = pm4py.read_xes("../event_logs/Production.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
-    print("PurchasingExample")
+    print("\nPurchasingExample")
     event_log = pm4py.read_xes("../event_logs/PurchasingExample.xes.gz")
+    check_event_lifecycles(event_log)
+    analyze_stats(event_log)
+    print("\nConfidential")
+    event_log = pm4py.read_xes("../event_logs/confidential_5000_filtered.xes.gz")
+    check_event_lifecycles(event_log)
     analyze_stats(event_log)
 
 
@@ -66,11 +79,18 @@ def check_event_lifecycles(event_log: EventLog):
         starts = []
         for event in trace:
             if event['lifecycle:transition'] == 'start':
+                # if event['concept:name'] in starts:
+                #    print("'start' of an activity ('{}') before the completion of its previous activity instance in trace '{}'.".format(
+                #        event['concept:name'],
+                #        trace.attributes['concept:name']
+                #    ))
                 starts += [event['concept:name']]
             elif event['lifecycle:transition'] == 'complete':
                 if event['concept:name'] not in starts:
-                    print("'complete' event of '{}' not preceded by 'start' event in trace '{}'.".format(event['concept:name'],
-                                                                                                         trace.attributes['concept:name']))
+                    print("'complete' event of '{}' not preceded by 'start' event in trace '{}'.".format(
+                        event['concept:name'],
+                        trace.attributes['concept:name']
+                    ))
                 else:
                     starts.remove(event['concept:name'])
             elif not diff_lifecycle_flag:
