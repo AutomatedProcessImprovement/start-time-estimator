@@ -1,24 +1,46 @@
 from statistics import median, mean
 
+import pandas as pd
 import pm4py
 from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.algo.filtering.log.variants import variants_filter
 from pm4py.objects.log.obj import EventLog
+from pm4py.statistics.traces.generic.pandas import case_statistics
 
 
 def analyze_stats(event_log):
-    print("num_traces,num_events,num_variants,num_activities,min_trace_length,median_trace_length,avg_trace_length,max_trace_length")
-    num_traces = len(event_log)
-    trace_lengths = [len(trace) for trace in event_log]
-    num_events = sum(trace_lengths)
-    num_variants = len(variants_filter.get_variants(event_log))
-    num_activities = len(attributes_filter.get_attribute_values(event_log, 'concept:name'))
-    min_trace_length = min(trace_lengths)
-    median_trace_length = median(trace_lengths)
-    avg_trace_length = mean(trace_lengths)
-    max_trace_length = max(trace_lengths)
+    print("num_traces,num_events,num_variants,num_activities,min_trace_length,"
+          "median_trace_length,avg_trace_length,max_trace_length,num_resources")
+    if type(event_log) is pd.DataFrame:
+        num_traces = len(event_log['case_id'].unique())
+        trace_lengths = [len(trace) for (key, trace) in event_log.groupby(['case_id'])]
+        num_events = len(event_log)
+        num_variants = len(
+            case_statistics.get_variants_df(
+                event_log,
+                parameters={case_statistics.Parameters.CASE_ID_KEY: "case_id",
+                            case_statistics.Parameters.ACTIVITY_KEY: "Activity"}
+            )['variant'].unique()
+        )
+        num_activities = len(event_log['Activity'].unique())
+        min_trace_length = min(trace_lengths)
+        median_trace_length = median(trace_lengths)
+        avg_trace_length = mean(trace_lengths)
+        max_trace_length = max(trace_lengths)
+        num_resources = len(event_log['Resource'].unique())
+    else:
+        num_traces = len(event_log)
+        trace_lengths = [len(trace) for trace in event_log]
+        num_events = sum(trace_lengths)
+        num_variants = len(variants_filter.get_variants(event_log))
+        num_activities = len(attributes_filter.get_attribute_values(event_log, 'concept:name'))
+        min_trace_length = min(trace_lengths)
+        median_trace_length = median(trace_lengths)
+        avg_trace_length = mean(trace_lengths)
+        max_trace_length = max(trace_lengths)
+        num_resources = len(attributes_filter.get_attribute_values(event_log, 'org:resource'))
 
-    print("{},{},{},{},{},{},{},{}".format(
+    print("{},{},{},{},{},{},{},{},{}".format(
         num_traces,
         num_events,
         num_variants,
@@ -26,11 +48,16 @@ def analyze_stats(event_log):
         min_trace_length,
         median_trace_length,
         avg_trace_length,
-        max_trace_length
+        max_trace_length,
+        num_resources
     ))
 
 
 def event_log_stats():
+    print("\nApplication_to_Approval_Government_Agency")
+    event_log = pm4py.read_xes("../event_logs/Application_to_Approval_Government_Agency.xes.gz")
+    check_event_lifecycles(event_log)
+    analyze_stats(event_log)
     print("\nBPI_Challenge_2012_W_Two_TS")
     event_log = pm4py.read_xes("../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz")
     check_event_lifecycles(event_log)
@@ -41,6 +68,10 @@ def event_log_stats():
     analyze_stats(event_log)
     print("\ncallcentre")
     event_log = pm4py.read_xes("../event_logs/callcentre.xes.gz")
+    check_event_lifecycles(event_log)
+    analyze_stats(event_log)
+    print("\nConfidential")
+    event_log = pm4py.read_xes("../event_logs/confidential.xes.gz")
     check_event_lifecycles(event_log)
     analyze_stats(event_log)
     print("\nConsultaDataMining201618")
@@ -55,20 +86,20 @@ def event_log_stats():
     event_log = pm4py.read_xes("../event_logs/insurance.xes.gz")
     check_event_lifecycles(event_log)
     analyze_stats(event_log)
+    print("\nLoan_Application")
+    event_log = pm4py.read_xes("../event_logs/Loan_Application.xes.gz")
+    check_event_lifecycles(event_log)
+    analyze_stats(event_log)
     print("\npoc_processmining")
     event_log = pm4py.read_xes("../event_logs/poc_processmining.xes.gz")
     check_event_lifecycles(event_log)
     analyze_stats(event_log)
+    print("\nProcure_to_Pay")
+    event_log = pm4py.read_xes("../event_logs/Procure_to_Pay.xes.gz")
+    check_event_lifecycles(event_log)
+    analyze_stats(event_log)
     print("\nProduction")
     event_log = pm4py.read_xes("../event_logs/Production.xes.gz")
-    check_event_lifecycles(event_log)
-    analyze_stats(event_log)
-    print("\nPurchasingExample")
-    event_log = pm4py.read_xes("../event_logs/PurchasingExample.xes.gz")
-    check_event_lifecycles(event_log)
-    analyze_stats(event_log)
-    print("\nConfidential")
-    event_log = pm4py.read_xes("../event_logs/confidential_5000_filtered.xes.gz")
     check_event_lifecycles(event_log)
     analyze_stats(event_log)
 
