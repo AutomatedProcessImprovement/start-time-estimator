@@ -81,5 +81,36 @@ def from_csv_to_simod_xes(event_log_path: str, log_ids: EventLogIDs) -> None:
     export_event_log_only_millis(event_log, event_log_path.replace(".csv.gz", ".xes"))
 
 
+def unify_csv_date_format(event_log_path: str, log_ids: EventLogIDs, output_path: str) -> None:
+    """
+        Read a CSV event log with [log_ids] having start and end times per activity instance, and export
+        it with a unified date format 'yyyy-mm-ddThh:mm:ss.sss+zz:zz'.
+
+        :param event_log_path: path to the CSV event log file.
+        :param log_ids: IDs correspondence in the CSV log.
+        :param output_path: path to the file where to write the formatted log.
+    """
+    # Read event log
+    event_log = pd.read_csv(event_log_path)
+    # Set case id as object
+    event_log = event_log.astype({log_ids.case: object})
+    # Convert timestamp value to datetime
+    event_log[log_ids.end_timestamp] = pd.to_datetime(event_log[log_ids.end_timestamp], utc=True)
+    event_log[log_ids.start_timestamp] = pd.to_datetime(event_log[log_ids.start_timestamp], utc=True)
+    # Convert back to string fulfilling format
+    event_log[log_ids.end_timestamp] = \
+        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
+        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
+        ":" + \
+        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
+    event_log[log_ids.start_timestamp] = \
+        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
+        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
+        ":" + \
+        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
+    # Export event log
+    event_log.to_csv(output_path, encoding='utf-8', index=False)
+
+
 if __name__ == '__main__':
     pass
