@@ -1,7 +1,9 @@
 import time
 
+from pm4py.objects.conversion.log import converter as log_converter
+
 from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
-    HeuristicsThresholds, OutlierStatistic
+    HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 from estimate_start_times import StartTimeEstimator
 from event_log_readers import read_event_log
 from event_log_writers import write_event_log
@@ -20,7 +22,16 @@ def run_estimation(event_log_path, configuration, output_log_path):
     extended_event_log = start_time_estimator.estimate()
     end_time = time.process_time()
     print("Estimation finished ({}s).".format(end_time - start_time))
-    # Export
+    # Export as csv
+    extended_event_log = (log_converter
+                          .apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME)
+                          .rename(columns={'case:{}'.format(configuration.log_ids.case): DEFAULT_CSV_IDS.case,
+                                           configuration.log_ids.activity: DEFAULT_CSV_IDS.activity,
+                                           configuration.log_ids.start_timestamp: DEFAULT_CSV_IDS.start_timestamp,
+                                           configuration.log_ids.end_timestamp: DEFAULT_CSV_IDS.end_timestamp,
+                                           configuration.log_ids.resource: DEFAULT_CSV_IDS.resource
+                                           })
+                          .drop([configuration.log_ids.lifecycle], axis=1))
     write_event_log(extended_event_log, output_log_path)
 
 
@@ -44,7 +55,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/confidential.xes.gz", config,
-                   "../event_logs/{}/confidential_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/confidential_estimated.csv.gz".format(folder))
 
     # CVS Pharmacy
     config = Configuration(
@@ -58,7 +69,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/cvs_pharmacy.xes.gz", config,
-                   "../event_logs/{}/cvs_pharmacy_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/cvs_pharmacy_estimated.csv.gz".format(folder))
 
     # Loan Application
     config = Configuration(
@@ -72,7 +83,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/Loan_Application.xes.gz", config,
-                   "../event_logs/{}/Loan_Application_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/Loan_Application_estimated.csv.gz".format(folder))
 
     # Procure to Pay
     config = Configuration(
@@ -85,7 +96,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/Procure_to_Pay.xes.gz", config,
-                   "../event_logs/{}/Procure_to_Pay_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/Procure_to_Pay_estimated.csv.gz".format(folder))
 
     # ------------------------------- #
     # ---------- REAL LOGS ---------- #
@@ -102,7 +113,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/Application_to_Approval_Government_Agency.xes.gz", config,
-                   "../event_logs/{}/Application_to_Approval_Government_Agency_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/Application_to_Approval_Government_Agency_estimated.csv.gz".format(folder))
 
     # BPIC 2012
     config = Configuration(
@@ -115,7 +126,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz", config,
-                   "../event_logs/{}/BPI_Challenge_2012_W_Two_TS_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/BPI_Challenge_2012_W_Two_TS_estimated.csv.gz".format(folder))
 
     # BPIC 2017
     config = Configuration(
@@ -128,7 +139,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/BPI_Challenge_2017_W_Two_TS.xes.gz", config,
-                   "../event_logs/{}/BPI_Challenge_2017_W_Two_TS_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/BPI_Challenge_2017_W_Two_TS_estimated.csv.gz".format(folder))
 
     # Call centre
     config = Configuration(
@@ -141,7 +152,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/callcentre.xes.gz", config,
-                   "../event_logs/{}/callcentre_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/callcentre_estimated.csv.gz".format(folder))
 
     # Consulta Data Mining 2016 - 2018
     config = Configuration(
@@ -155,7 +166,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/ConsultaDataMining201618.xes.gz", config,
-                   "../event_logs/{}/ConsultaDataMining201618_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/ConsultaDataMining201618_estimated.csv.gz".format(folder))
 
     # Insurance
     config = Configuration(
@@ -168,7 +179,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/insurance.xes.gz", config,
-                   "../event_logs/{}/insurance_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/insurance_estimated.csv.gz".format(folder))
 
     # POC Process Mining
     config = Configuration(
@@ -181,7 +192,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/poc_processmining.xes.gz", config,
-                   "../event_logs/{}/poc_processmining_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/poc_processmining_estimated.csv.gz".format(folder))
 
     # Production
     config = Configuration(
@@ -194,7 +205,7 @@ def main():
         outlier_threshold=outlier_threshold
     )
     run_estimation("../event_logs/Production.xes.gz", config,
-                   "../event_logs/{}/Production_estimated.xes.gz".format(folder))
+                   "../event_logs/{}/Production_estimated.csv.gz".format(folder))
 
 
 if __name__ == '__main__':
