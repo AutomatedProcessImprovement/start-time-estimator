@@ -1,8 +1,25 @@
+from datetime import datetime
+
 import pm4py
 
-from concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, NoConcurrencyOracle
+from concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, NoConcurrencyOracle, DeactivatedConcurrencyOracle
 from config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 from event_log_readers import read_csv_log
+
+
+def test_deactivated_concurrency_oracle():
+    config = Configuration()
+    concurrency_oracle = DeactivatedConcurrencyOracle(config)
+    # The configuration for the algorithm is the passed
+    assert concurrency_oracle.config == config
+    # Empty set as concurrency by default
+    assert concurrency_oracle.concurrency == {}
+    # The concurrency option is deactivated, so always return [non_estimated_time]
+    assert concurrency_oracle.enabled_since(None, datetime.now()) == config.non_estimated_time
+    # There is no concurrency, so always enabled since the last event finished
+    assert concurrency_oracle.enabled_since(None, datetime.fromisoformat('2012-11-07T10:00:00.000+02:00')) == config.non_estimated_time
+    # [non_estimated_time] as the enablement time of the first event in the trace
+    assert concurrency_oracle.enabled_since(None, datetime.fromisoformat('2006-07-20T22:03:11.000+02:00')) == config.non_estimated_time
 
 
 def test_no_concurrency_oracle_el():

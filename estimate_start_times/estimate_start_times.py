@@ -8,7 +8,7 @@ import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
 from common import EventLogType
-from concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, HeuristicsConcurrencyOracle
+from concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
 from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from resource_availability import SimpleResourceAvailability
 
@@ -27,7 +27,9 @@ class StartTimeEstimator:
         else:
             raise ValueError("Unrecognizable event log instance!! Only Pandas-DataFrame and PM4PY-EventLog are supported.")
         # Set concurrency oracle
-        if self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
+        if self.config.concurrency_oracle_type == ConcurrencyOracleType.DEACTIVATED:
+            self.concurrency_oracle = DeactivatedConcurrencyOracle(self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
             self.concurrency_oracle = NoConcurrencyOracle(self.event_log, self.config)
         elif self.config.concurrency_oracle_type == ConcurrencyOracleType.ALPHA:
             self.concurrency_oracle = AlphaConcurrencyOracle(self.event_log, self.config)

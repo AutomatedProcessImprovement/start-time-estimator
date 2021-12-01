@@ -39,6 +39,15 @@ class ConcurrencyOracle:
         return previous_time
 
 
+class DeactivatedConcurrencyOracle(ConcurrencyOracle):
+    def __init__(self, config: Configuration):
+        # Super (with empty concurrency)
+        super(DeactivatedConcurrencyOracle, self).__init__({}, config)
+
+    def enabled_since(self, trace, event) -> datetime:
+        return self.config.non_estimated_time
+
+
 class NoConcurrencyOracle(ConcurrencyOracle):
     def __init__(self, event_log: Union[EventLog, pd.DataFrame], config):
         # Default with no concurrency (all directly-follows relations)
