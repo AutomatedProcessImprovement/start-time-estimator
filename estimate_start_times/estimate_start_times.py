@@ -8,15 +8,9 @@ import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
 from common import EventLogType
+from concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, HeuristicsConcurrencyOracle
 from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
-from data_frame.concurrency_oracle import AlphaConcurrencyOracle as DFAlphaConcurrencyOracle
-from data_frame.concurrency_oracle import HeuristicsConcurrencyOracle as DFHeuristicsConcurrencyOracle
-from data_frame.concurrency_oracle import NoConcurrencyOracle as DFNoConcurrencyOracle
-from data_frame.resource_availability import SimpleResourceAvailability as DFSimpleResourceAvailability
-from event_log.concurrency_oracle import AlphaConcurrencyOracle as ELAlphaConcurrencyOracle
-from event_log.concurrency_oracle import HeuristicsConcurrencyOracle as ELHeuristicsConcurrencyOracle
-from event_log.concurrency_oracle import NoConcurrencyOracle as ELNoConcurrencyOracle
-from event_log.resource_availability import SimpleResourceAvailability as ELSimpleResourceAvailability
+from resource_availability import SimpleResourceAvailability
 
 
 class StartTimeEstimator:
@@ -25,42 +19,27 @@ class StartTimeEstimator:
         self.event_log = event_log
         # Set configuration
         self.config = config
-        # Set parameters
+        # Set event log type
         if type(self.event_log) is EventLog:
-            # Set type of event log
             self.event_log_type = EventLogType.EVENT_LOG
-            # Set concurrency oracle
-            if self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
-                self.concurrency_oracle = ELNoConcurrencyOracle(self.event_log, self.config)
-            elif self.config.concurrency_oracle_type == ConcurrencyOracleType.ALPHA:
-                self.concurrency_oracle = ELAlphaConcurrencyOracle(self.event_log, self.config)
-            elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:
-                self.concurrency_oracle = ELHeuristicsConcurrencyOracle(self.event_log, self.config)
-            else:
-                raise ValueError("No concurrency oracle defined!")
-            # Set resource availability
-            if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
-                self.resource_availability = ELSimpleResourceAvailability(self.event_log, self.config)
-            else:
-                raise ValueError("No resource availability defined!")
         elif type(self.event_log) is pd.DataFrame:
             self.event_log_type = EventLogType.DATA_FRAME
-            # Set concurrency oracle
-            if self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
-                self.concurrency_oracle = DFNoConcurrencyOracle(self.event_log, self.config)
-            elif self.config.concurrency_oracle_type == ConcurrencyOracleType.ALPHA:
-                self.concurrency_oracle = DFAlphaConcurrencyOracle(self.event_log, self.config)
-            elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:
-                self.concurrency_oracle = DFHeuristicsConcurrencyOracle(self.event_log, self.config)
-            else:
-                raise ValueError("No concurrency oracle defined!")
-            # Set resource availability
-            if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
-                self.resource_availability = DFSimpleResourceAvailability(self.event_log, self.config)
-            else:
-                raise ValueError("No resource availability defined!")
         else:
             raise ValueError("Unrecognizable event log instance!! Only Pandas-DataFrame and PM4PY-EventLog are supported.")
+        # Set concurrency oracle
+        if self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
+            self.concurrency_oracle = NoConcurrencyOracle(self.event_log, self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.ALPHA:
+            self.concurrency_oracle = AlphaConcurrencyOracle(self.event_log, self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:
+            self.concurrency_oracle = HeuristicsConcurrencyOracle(self.event_log, self.config)
+        else:
+            raise ValueError("No concurrency oracle defined!")
+        # Set resource availability
+        if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
+            self.resource_availability = SimpleResourceAvailability(self.event_log, self.config)
+        else:
+            raise ValueError("No resource availability defined!")
 
     def estimate(self) -> Union[EventLog, pd.DataFrame]:
         if self.event_log_type == EventLogType.DATA_FRAME:
