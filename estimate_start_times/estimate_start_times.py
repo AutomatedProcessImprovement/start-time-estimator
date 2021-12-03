@@ -169,10 +169,10 @@ class StartTimeEstimator:
             non_estimated_events = self.event_log[self.event_log[self.config.log_ids.start_timestamp] == self.config.non_estimated_time]
             for index, non_estimated_event in non_estimated_events.iterrows():
                 activity = non_estimated_event[self.config.log_ids.activity]
-                if activity in activity_durations:
-                    duration = self._get_activity_duration(activity_durations, activity)
-                    self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
-                        non_estimated_event[self.config.log_ids.end_timestamp] - duration
+                # Re-estimate
+                duration = self._get_activity_duration(activity_durations, activity)
+                self.event_log.loc[index, self.config.log_ids.start_timestamp] = \
+                    non_estimated_event[self.config.log_ids.end_timestamp] - duration
         elif self.event_log_type == EventLogType.EVENT_LOG:
             # Store the durations of the estimated ones
             non_estimated_events = []
@@ -193,9 +193,9 @@ class StartTimeEstimator:
             # Set as start time the end time minus a statistic of the durations (mean/mode/median)
             for event in non_estimated_events:
                 activity = event[self.config.log_ids.activity]
-                if activity in activity_durations:
-                    duration = self._get_activity_duration(activity_durations, activity)
-                    event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - duration
+                # Re-estimate
+                duration = self._get_activity_duration(activity_durations, activity)
+                event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp] - duration
 
     def _get_activity_duration(self, activity_durations, activity):
         if activity in activity_durations:
