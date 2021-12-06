@@ -26,7 +26,12 @@ class ResourceAvailability:
         else:
             # If not, take the first timestamp previous to [timestamp]
             resource_calendar = self.resources_calendar[resource]
-            timestamp_previous_event = next((t for t in reversed(resource_calendar) if t < timestamp), self.config.non_estimated_time)
+            if type(resource_calendar) is pd.Series:
+                timestamp_previous_event = resource_calendar.where(resource_calendar < timestamp).max()
+                if pd.isna(timestamp_previous_event):
+                    timestamp_previous_event = self.config.non_estimated_time
+            else:
+                timestamp_previous_event = next((t for t in reversed(resource_calendar) if t < timestamp), self.config.non_estimated_time)
         return timestamp_previous_event
 
 
@@ -51,8 +56,7 @@ def _get_simple_resources_calendar_df(event_log: pd.DataFrame, config: Configura
     resources = {str(i) for i in event_log[config.log_ids.resource].unique()}
     resources_calendar = {}
     for resource in (resources - config.bot_resources):
-        resource_events = event_log[event_log[config.log_ids.resource] == resource]
-        resources_calendar[resource] = sorted(resource_events[config.log_ids.end_timestamp])
+        resources_calendar[resource] = event_log[event_log[config.log_ids.resource] == resource][config.log_ids.end_timestamp]
     # Return resources calendar
     return resources_calendar
 
