@@ -55,6 +55,16 @@ class StartTimeEstimator:
         if self.config.log_ids.start_timestamp not in self.event_log.columns:
             self.event_log[self.config.log_ids.start_timestamp] = pd.NaT
         # Process instant activities
+        self.event_log[self.config.log_ids.enabled_time] = np.where(
+            self.event_log[self.config.log_ids.activity].isin(self.config.instant_activities),
+            self.event_log[self.config.log_ids.end_timestamp],
+            self.event_log[self.config.log_ids.start_timestamp]
+        )
+        self.event_log[self.config.log_ids.available_time] = np.where(
+            self.event_log[self.config.log_ids.activity].isin(self.config.instant_activities),
+            self.event_log[self.config.log_ids.end_timestamp],
+            self.event_log[self.config.log_ids.start_timestamp]
+        )
         self.event_log[self.config.log_ids.start_timestamp] = np.where(
             self.event_log[self.config.log_ids.activity].isin(self.config.instant_activities),
             self.event_log[self.config.log_ids.end_timestamp],
@@ -69,6 +79,8 @@ class StartTimeEstimator:
                         event[self.config.log_ids.resource],
                         event[self.config.log_ids.end_timestamp]
                     )
+                    self.event_log.loc[index, self.config.log_ids.enabled_time] = enabled_time
+                    self.event_log.loc[index, self.config.log_ids.available_time] = available_time
                     self.event_log.loc[index, self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Re-estimate start time of those events with an estimated duration over the threshold
         if not math.isnan(self.config.outlier_threshold):
@@ -85,6 +97,8 @@ class StartTimeEstimator:
             for event in trace:
                 if event[self.config.log_ids.activity] in self.config.instant_activities:
                     # Process events of instant activities
+                    event[self.config.log_ids.enabled_time] = event[self.config.log_ids.end_timestamp]
+                    event[self.config.log_ids.available_time] = event[self.config.log_ids.end_timestamp]
                     event[self.config.log_ids.start_timestamp] = event[self.config.log_ids.end_timestamp]
                 elif self.config.log_ids.start_timestamp not in event:
                     # Estimate start time for non-instant events without start time
@@ -93,6 +107,8 @@ class StartTimeEstimator:
                         event[self.config.log_ids.resource],
                         event[self.config.log_ids.end_timestamp]
                     )
+                    event[self.config.log_ids.enabled_time] = enabled_time
+                    event[self.config.log_ids.available_time] = available_time
                     event[self.config.log_ids.start_timestamp] = max(enabled_time, available_time)
         # Re-estimate start time of those events with an estimated duration over the threshold
         if not math.isnan(self.config.outlier_threshold):

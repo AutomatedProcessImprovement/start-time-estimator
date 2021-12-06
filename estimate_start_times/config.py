@@ -1,7 +1,8 @@
 import enum
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import timedelta
 
+import pandas as pd
 import pytz
 
 
@@ -36,6 +37,8 @@ class EventLogIDs:
     activity: str = 'activity'
     start_timestamp: str = 'start_timestamp'
     end_timestamp: str = 'end_timestamp'
+    enabled_time: str = 'enabled_time'
+    available_time: str = 'available_time'
     resource: str = 'resource'
     lifecycle: str = 'lifecycle'
 
@@ -44,12 +47,16 @@ DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
                               activity='Activity',
                               start_timestamp='start_time',
                               end_timestamp='end_time',
+                              enabled_time='enabled_time',
+                              available_time='available_time',
                               resource='Resource',
                               lifecycle='Lifecycle')
 DEFAULT_XES_IDS = EventLogIDs(case='concept:name',
                               activity='concept:name',
                               start_timestamp='time:start',
                               end_timestamp='time:timestamp',
+                              enabled_time='time:enabled',
+                              available_time='time:available',
                               resource='org:resource',
                               lifecycle='lifecycle:transition')
 
@@ -87,7 +94,7 @@ class Configuration:
     concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.ALPHA
     resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
     missing_resource: str = "NOT_SET"
-    non_estimated_time: datetime = datetime.min.replace(tzinfo=pytz.UTC)
+    non_estimated_time: pd.Timestamp = pd.Timestamp.min.tz_localize(tz=pytz.UTC) + timedelta(seconds=1)
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MEDIAN
     bot_resources: set = field(default_factory=set)
     instant_activities: set = field(default_factory=set)
