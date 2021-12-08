@@ -1,129 +1,158 @@
 from datetime import timedelta
-from typing import Union
 
+import numpy as np
 import pandas as pd
-from numpy import mean, median
-from pm4py.objects.log.obj import EventLog
 from sklearn.metrics import mean_absolute_error
 
-from config import DEFAULT_CSV_IDS, EventLogIDs
+from config import DEFAULT_CSV_IDS
 
 logs = [
-    "Application_to_Approval_Government_Agency",
+    "insurance",
     "BPI_Challenge_2012_W_Two_TS",
     "BPI_Challenge_2017_W_Two_TS",
+    "Application_to_Approval_Government_Agency",
     "callcentre",
-    "confidential",
     "ConsultaDataMining201618",
-    "cvs_pharmacy",
-    "insurance",
-    "Loan_Application",
     "poc_processmining",
-    "Procure_to_Pay",
     "Production",
+    "confidential",
+    "Loan_Application",
+    "cvs_pharmacy",
+    "Procure_to_Pay",
 ]
 raw_path = "../event_logs/{}.csv.gz"
 
 
-def get_cycle_times(event_log: Union[EventLog, pd.DataFrame], config: EventLogIDs) -> list:
-    # Get cycle times
-    cycle_times = []
-    if type(event_log) is EventLog:
-        for trace in event_log:
-            cycle_times += [
-                max([event[config.end_timestamp] for event in trace]) -
-                min([event[config.start_timestamp] for event in trace])
-            ]
-    else:
-        for (key, trace) in event_log.groupby([config.case]):
-            cycle_times += [
-                max([event[config.end_timestamp] for (_, event) in trace.iterrows()]) -
-                min([event[config.start_timestamp] for (_, event) in trace.iterrows()])
-            ]
-    # Return measured cycle times
-    return [time.total_seconds() for time in cycle_times]
-
-
-def get_processing_times(event_log: Union[EventLog, pd.DataFrame], config: EventLogIDs) -> list:
-    # Get processing times
-    processing_times = []
-    if type(event_log) is EventLog:
-        for trace in event_log:
-            processing_times += [
-                sum(
-                    [event[config.end_timestamp] - event[config.start_timestamp] for event in trace],
-                    timedelta(0)
-                )
-            ]
-    else:
-        for (key, trace) in event_log.groupby([config.case]):
-            processing_times += [
-                sum(
-                    [event[config.end_timestamp] - event[config.start_timestamp] for (_, event) in trace.iterrows()],
-                    timedelta(0)
-                )
-            ]
-    # Return measured processing times
-    return [time.total_seconds() for time in processing_times]
+def read_and_preprocess_log(event_log_path: str) -> pd.DataFrame:
+    # Read from CSV
+    event_log = pd.read_csv(event_log_path)
+    # Transform to Timestamp bot start and end columns
+    event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
+    event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
+    if DEFAULT_CSV_IDS.enabled_time in event_log:
+        event_log[DEFAULT_CSV_IDS.enabled_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.enabled_time], utc=True)
+    if DEFAULT_CSV_IDS.available_time in event_log:
+        event_log[DEFAULT_CSV_IDS.available_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.available_time], utc=True)
+    # Sort by end timestamp, then by start timestamp, and then by activity name
+    event_log = event_log.sort_values(
+        [DEFAULT_CSV_IDS.end_timestamp, DEFAULT_CSV_IDS.activity, DEFAULT_CSV_IDS.case, DEFAULT_CSV_IDS.resource]
+    )
+    # Reset the index
+    event_log.reset_index(drop=True, inplace=True)
+    return event_log
 
 
 def measure():
-    print("log,"
-          "mae_proc_time (s),min_proc_time,max_proc_time,avg_proc_time,median_proc_time,"
-          "mae_cycle_time (s),min_cycle_time,max_cycle_time,avg_cycle_time,median_cycle_time")
-    for log in logs:
-        # Stats for the raw log
-        raw_event_log = pd.read_csv(raw_path.format(log))
-        raw_event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(raw_event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
-        raw_event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(raw_event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
-        raw_processing_times = get_processing_times(raw_event_log, DEFAULT_CSV_IDS)
-        raw_cycle_times = get_cycle_times(raw_event_log, DEFAULT_CSV_IDS)
-        print("{},,{},{},{},{},,{},{},{},{}".format(
-            log,
-            min(raw_processing_times),
-            max(raw_processing_times),
-            mean(raw_processing_times),
-            median(raw_processing_times),
-            min(raw_cycle_times),
-            max(raw_cycle_times),
-            mean(raw_cycle_times),
-            median(raw_cycle_times)
-        ))
-        # Stats for the Heuristics Median no outlier control
-        measure_estimated_stats(log, "heur_median", raw_processing_times, raw_cycle_times)
-        # Stats for the Heuristics Median Threshold=200%
-        measure_estimated_stats(log, "heur_median_2", raw_processing_times, raw_cycle_times)
-        # Stats for the Heuristics Median Threshold=500%
-        measure_estimated_stats(log, "heur_median_5", raw_processing_times, raw_cycle_times)
-        # Stats for the Heuristics Mode no outlier control
-        measure_estimated_stats(log, "heur_mode", raw_processing_times, raw_cycle_times)
-        # Stats for the Heuristics Mode Threshold=200%
-        measure_estimated_stats(log, "heur_mode_2", raw_processing_times, raw_cycle_times)
-        # Stats for the Heuristics Mode Threshold=500%
-        measure_estimated_stats(log, "heur_mode_5", raw_processing_times, raw_cycle_times)
+    techniques = ["heur_median", "heur_median_2", "heur_median_5",
+                  "heur_mode", "heur_mode_2", "heur_mode_5",
+                  "df_median", "df_median_2", "df_median_5",
+                  "df_mode", "df_mode_2", "df_mode_5",
+                  "only_resource_median", "only_resource_median_2", "only_resource_median_5",
+                  "only_resource_mode", "only_resource_mode_2", "only_resource_mode_5"]
+    print("log_technique,"
+          "smape_proc_times,"
+          "mape_proc_times,"
+          "mae_proc_times (s),"
+          "total_activity_instances,"
+          "num_selected_enabled_time,"
+          "num_selected_available_time,"
+          "num_re_estimated,"
+          "num_estimated_after_real,"
+          "num_estimated_before_real,"
+          "num_exact_estimation")
+    for log_name in logs:
+        raw_event_log = read_and_preprocess_log(raw_path.format(log_name))
+        for technique in techniques:
+            calculate_stats(log_name, technique, raw_event_log)
 
 
-def measure_estimated_stats(log: str, method: str, raw_processing_times: list, raw_cycle_times: list):
+def calculate_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
     # Measure stats for estimated log
-    estimated_event_log = pd.read_csv(raw_path.format(method + "/" + log + "_estimated"))
-    estimated_event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(estimated_event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
-    estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(estimated_event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
-    estimated_cycle_times = get_cycle_times(estimated_event_log, DEFAULT_CSV_IDS)
-    estimated_processing_times = get_processing_times(estimated_event_log, DEFAULT_CSV_IDS)
+    estimated_event_log = read_and_preprocess_log(raw_path.format(method + "/" + log_name + "_estimated"))
+    # Check sorting similarity
+    if not raw_event_log[DEFAULT_CSV_IDS.end_timestamp].equals(estimated_event_log[DEFAULT_CSV_IDS.end_timestamp]):
+        print("Different 'end_timestamp' order!!")
+    if not raw_event_log[DEFAULT_CSV_IDS.activity].equals(estimated_event_log[DEFAULT_CSV_IDS.activity]):
+        print("Different 'activity' order!!")
+    if not raw_event_log[DEFAULT_CSV_IDS.case].equals(estimated_event_log[DEFAULT_CSV_IDS.case]):
+        print("Different 'case' order!!")
+    # Print stats
+    raw_processing_times = (
+                                   raw_event_log[DEFAULT_CSV_IDS.end_timestamp] -
+                                   raw_event_log[DEFAULT_CSV_IDS.start_timestamp]
+                           ).astype(np.int64) / 1000000000
+    estimated_processing_times = (
+                                         estimated_event_log[DEFAULT_CSV_IDS.end_timestamp] -
+                                         estimated_event_log[DEFAULT_CSV_IDS.start_timestamp]
+                                 ).astype(np.int64) / 1000000000
+    raw_minus_estimated = raw_processing_times - estimated_processing_times
     print("{}_{},{},{},{},{},{},{},{},{},{},{}".format(
-        log,
+        log_name,
         method,
+        symmetric_mean_absolute_percentage_error(raw_processing_times, estimated_processing_times),
+        mean_absolute_percentage_error(raw_processing_times, estimated_processing_times),
         mean_absolute_error(raw_processing_times, estimated_processing_times),
-        min(estimated_processing_times) - min(raw_processing_times),
-        max(estimated_processing_times) - max(raw_processing_times),
-        mean(estimated_processing_times) - mean(raw_processing_times),
-        median(estimated_processing_times) - median(raw_processing_times),
-        mean_absolute_error(raw_cycle_times, estimated_cycle_times),
-        min(estimated_cycle_times) - min(raw_cycle_times),
-        max(estimated_cycle_times) - max(raw_cycle_times),
-        mean(estimated_cycle_times) - mean(raw_cycle_times),
-        median(estimated_cycle_times) - median(raw_cycle_times)
+        len(estimated_event_log),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] == estimated_event_log[DEFAULT_CSV_IDS.enabled_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.available_time])).sum(),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] == estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
+        (raw_minus_estimated > 0).sum(),
+        (raw_minus_estimated < 0).sum(),
+        (raw_minus_estimated == 0).sum()
     ))
+
+
+def symmetric_mean_absolute_percentage_error(actual, forecast) -> float:
+    return np.sum(2 * np.abs(forecast - actual) / (np.abs(actual) + np.abs(forecast))) / len(actual)
+
+
+def mean_absolute_percentage_error(actual, forecast) -> float:
+    return np.sum(np.abs(forecast - actual) / np.abs(actual)) / len(actual)
+
+
+def mean_idle_multitasking_times(event_log: pd.DataFrame) -> (float, float):
+    abs_idle_times = []
+    abs_multi_times = []
+    total_times = []
+    for (resource, events) in event_log.groupby([DEFAULT_CSV_IDS.resource]):
+        start_times = events[DEFAULT_CSV_IDS.start_timestamp].to_frame().rename(columns={DEFAULT_CSV_IDS.start_timestamp: 'time'})
+        start_times['lifecycle'] = 'start'
+        end_times = events[DEFAULT_CSV_IDS.end_timestamp].to_frame().rename(columns={DEFAULT_CSV_IDS.end_timestamp: 'time'})
+        end_times['lifecycle'] = 'end'
+        times = start_times.append(end_times).sort_values(['time', 'lifecycle'], ascending=[True, False])
+        counter = 0
+        idle_time = timedelta(0)
+        multi_time = timedelta(0)
+        start_idle_time = times['time'].min()
+        total_time = times['time'].max() - times['time'].min()
+        for time, lifecycle in times.itertuples(index=False):
+            if lifecycle == 'start':
+                counter += 1
+                if counter == 1:
+                    # Idle time has finished
+                    idle_time += time - start_idle_time
+                elif counter == 2:
+                    # Multitasking time starting
+                    start_multi_time = time
+            else:
+                counter -= 1
+                if counter < 0:
+                    print("Error, wrong sorting, ending an activity without having another one started.")
+                elif counter == 0:
+                    # Idle time starts again
+                    start_idle_time = time
+                elif counter == 1:
+                    # Ends multitasking time
+                    multi_time += time - start_multi_time
+        abs_idle_times += [idle_time]
+        abs_multi_times += [multi_time]
+        total_times += [total_time]
+
+    return (sum(abs_idle_times, timedelta(0)) / sum(total_times, timedelta(0)),
+            sum(abs_multi_times, timedelta(0)) / sum(total_times, timedelta(0)))
 
 
 if __name__ == '__main__':
