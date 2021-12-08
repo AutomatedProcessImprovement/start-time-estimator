@@ -1,5 +1,6 @@
 import time
 
+import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
 
 from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
@@ -23,16 +24,41 @@ def run_estimation(event_log_path, configuration, output_log_path):
     end_time = time.process_time()
     print("Estimation finished ({}s).".format(end_time - start_time))
     # Export as csv
-    extended_event_log = (log_converter
-                          .apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME)
-                          .rename(columns={'case:{}'.format(configuration.log_ids.case): DEFAULT_CSV_IDS.case,
-                                           configuration.log_ids.activity: DEFAULT_CSV_IDS.activity,
-                                           configuration.log_ids.start_timestamp: DEFAULT_CSV_IDS.start_timestamp,
-                                           configuration.log_ids.end_timestamp: DEFAULT_CSV_IDS.end_timestamp,
-                                           configuration.log_ids.resource: DEFAULT_CSV_IDS.resource
-                                           })
-                          .drop([configuration.log_ids.lifecycle], axis=1))
+    extended_event_log = log_converter.apply(extended_event_log, variant=log_converter.Variants.TO_DATA_FRAME)
+    extended_event_log = extended_event_log[[
+        'case:{}'.format(configuration.log_ids.case),
+        configuration.log_ids.activity,
+        configuration.log_ids.start_timestamp,
+        configuration.log_ids.end_timestamp,
+        configuration.log_ids.enabled_time,
+        configuration.log_ids.available_time,
+        configuration.log_ids.resource
+    ]]
+    extended_event_log = extended_event_log.rename(columns={'case:{}'.format(configuration.log_ids.case): DEFAULT_CSV_IDS.case,
+                                                            configuration.log_ids.activity: DEFAULT_CSV_IDS.activity,
+                                                            configuration.log_ids.start_timestamp: DEFAULT_CSV_IDS.start_timestamp,
+                                                            configuration.log_ids.end_timestamp: DEFAULT_CSV_IDS.end_timestamp,
+                                                            configuration.log_ids.enabled_time: DEFAULT_CSV_IDS.enabled_time,
+                                                            configuration.log_ids.available_time: DEFAULT_CSV_IDS.available_time,
+                                                            configuration.log_ids.resource: DEFAULT_CSV_IDS.resource
+                                                            })
+    # Convert timestamp value to datetime
+    extended_event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.start_timestamp] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.start_timestamp])
+    extended_event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.end_timestamp] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.end_timestamp])
+    extended_event_log[DEFAULT_CSV_IDS.enabled_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.enabled_time], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.enabled_time] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.enabled_time])
+    extended_event_log[DEFAULT_CSV_IDS.available_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.available_time], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.available_time] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.available_time])
     write_event_log(extended_event_log, output_log_path)
+
+
+def timestamp_to_string(dates: pd.Series) -> pd.Series:
+    return (dates.apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) +
+            dates.apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) +
+            ":" +
+            dates.apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:]))
 
 
 def main():
