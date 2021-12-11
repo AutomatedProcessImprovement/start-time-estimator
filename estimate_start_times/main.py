@@ -77,6 +77,7 @@ def main():
         concurrency_oracle_type=ConcurrencyOracleType.HEURISTICS,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         heuristics_thresholds=HeuristicsThresholds(df=0.9, l2l=0.9),
+        instant_activities={"M1", "M2", "M3", "M4", "M5", "M6"},
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
