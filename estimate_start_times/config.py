@@ -86,6 +86,9 @@ class Configuration:
         instant_activities          Set of instantaneous activities, in order to set their events as instant.
         heuristics_thresholds       Thresholds for the heuristics concurrency oracle (only used is this oracle is selected as
                                     [concurrency_oracle_type].
+        consider_parallelism        Consider start times when checking for the enabled time of an activity in the concurrency oracle, if
+                                    'true', do not consider the events which end time is after the start time of the current activity
+                                    instance, they overlap so no causality between them.
         outlier_statistic           Statistic (e.g. median) to calculate from the distribution of each activity durations to consider and
                                     re-estimate the outlier events which estimated duration is higher.
         outlier_threshold           Threshold to control outliers, those events with estimated durations over
@@ -99,5 +102,6 @@ class Configuration:
     bot_resources: set = field(default_factory=set)
     instant_activities: set = field(default_factory=set)
     heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
+    consider_parallelism: bool = False
     outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
     outlier_threshold: float = float('nan')

@@ -19,8 +19,8 @@ class ConcurrencyOracle:
         if type(trace) is pd.DataFrame:
             # Calculate for pd.DataFrame
             previous_time = trace[self.config.log_ids.end_timestamp].where(  # End timestamps of the events
-                (trace[self.config.log_ids.end_timestamp] < event[
-                    self.config.log_ids.end_timestamp]) &  # which are previous to the current one
+                (trace[self.config.log_ids.end_timestamp] < event[self.config.log_ids.end_timestamp]) &  # previous to the current one
+                ((~self.config.consider_parallelism) or (trace[self.config.log_ids.end_timestamp] < event[self.config.log_ids.start_timestamp])) &  # not overlapping (if parallel check is up)
                 (~trace[self.config.log_ids.activity].isin(self.concurrency[event[self.config.log_ids.activity]]))  # with no concurrency
             ).max()  # and keeping only the last (highest) one
             if pd.isnull(previous_time):
@@ -29,9 +29,10 @@ class ConcurrencyOracle:
         else:
             # Calculate for pm4py.EventLog
             previous_time = next(
-                (previous_event[self.config.log_ids.end_timestamp] for previous_event in reversed(trace) if (
-                        previous_event[self.config.log_ids.end_timestamp] < event[self.config.log_ids.end_timestamp] and
-                        previous_event[self.config.log_ids.activity] not in self.concurrency[event[self.config.log_ids.activity]]
+                (previous_event[self.config.log_ids.end_timestamp] for previous_event in reversed(trace) if (  # End timestamps of the events
+                        previous_event[self.config.log_ids.end_timestamp] < event[self.config.log_ids.end_timestamp] and  # previous to the current one
+                        ((not self.config.consider_parallelism) or previous_event[self.config.log_ids.end_timestamp] < event[self.config.log_ids.start_timestamp]) and  # not overlapping (if parallel check is up)
+                        previous_event[self.config.log_ids.activity] not in self.concurrency[event[self.config.log_ids.activity]]  # with no concurrency
                 )),
                 self.config.non_estimated_time
             )
