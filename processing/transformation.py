@@ -1,3 +1,4 @@
+import gzip
 import os
 
 import pandas as pd
@@ -5,7 +6,7 @@ from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.obj import EventLog
 
-from config import EventLogIDs
+from config import EventLogIDs, DEFAULT_CSV_IDS
 
 
 def export_event_log_only_millis(event_log: EventLog, export_path: str) -> None:
@@ -31,7 +32,7 @@ def export_event_log_only_millis(event_log: EventLog, export_path: str) -> None:
     # Write to file
     xes_exporter.apply(event_log, export_path + ".str")
     # Edit timestamp fields to "date" (chapuza)
-    with open(export_path + ".str", 'r') as input_file, open(export_path, 'w') as output_file:
+    with open(export_path + ".str", 'r') as input_file, gzip.open(export_path + ".gz", 'wt') as output_file:
         for line in input_file.readlines():
             if "<string key=\"time:timestamp\"" in line:
                 output_file.write(line.replace("<string key=\"time:timestamp\"", "<date key=\"time:timestamp\""))
@@ -51,15 +52,15 @@ def from_csv_to_simod_xes(event_log_path: str, log_ids: EventLogIDs) -> None:
     # Read event log
     event_log = pd.read_csv(event_log_path)
     # Parse timestamps
-    event_log[log_ids.start_timestamp] = pd.to_datetime(event_log[log_ids.start_timestamp], utc=True)
-    event_log[log_ids.end_timestamp] = pd.to_datetime(event_log[log_ids.end_timestamp], utc=True)
+    event_log[log_ids.start_time] = pd.to_datetime(event_log[log_ids.start_time], utc=True)
+    event_log[log_ids.end_time] = pd.to_datetime(event_log[log_ids.end_time], utc=True)
     # Rename the columns to fit SIMOD format
     event_log = event_log.rename(
         columns={
             log_ids.case: 'case:concept:name',
             log_ids.activity: 'concept:name',
-            log_ids.start_timestamp: 'time:start',
-            log_ids.end_timestamp: 'time:timestamp',
+            log_ids.start_time: 'time:start',
+            log_ids.end_time: 'time:timestamp',
             log_ids.resource: 'org:resource'
         }
     )[
@@ -95,19 +96,19 @@ def unify_csv_date_format(event_log_path: str, log_ids: EventLogIDs, output_path
     # Set case id as object
     event_log = event_log.astype({log_ids.case: object})
     # Convert timestamp value to datetime
-    event_log[log_ids.end_timestamp] = pd.to_datetime(event_log[log_ids.end_timestamp], utc=True)
-    event_log[log_ids.start_timestamp] = pd.to_datetime(event_log[log_ids.start_timestamp], utc=True)
+    event_log[log_ids.end_time] = pd.to_datetime(event_log[log_ids.end_time], utc=True)
+    event_log[log_ids.start_time] = pd.to_datetime(event_log[log_ids.start_time], utc=True)
     # Convert back to string fulfilling format
-    event_log[log_ids.end_timestamp] = \
-        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
-        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
+    event_log[log_ids.end_time] = \
+        event_log[log_ids.end_time].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
+        event_log[log_ids.end_time].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
         ":" + \
-        event_log[log_ids.end_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
-    event_log[log_ids.start_timestamp] = \
-        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
-        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
+        event_log[log_ids.end_time].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
+    event_log[log_ids.start_time] = \
+        event_log[log_ids.start_time].apply(lambda x: x.strftime('%Y-%m-%dT%H:%M:%S.%f')).apply(lambda x: x[:-3]) + \
+        event_log[log_ids.start_time].apply(lambda x: x.strftime("%z")).apply(lambda x: x[:-2]) + \
         ":" + \
-        event_log[log_ids.start_timestamp].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
+        event_log[log_ids.start_time].apply(lambda x: x.strftime("%z")).apply(lambda x: x[-2:])
     # Export event log
     event_log.to_csv(output_path, encoding='utf-8', index=False)
 

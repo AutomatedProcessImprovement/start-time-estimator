@@ -35,8 +35,8 @@ class ResourceAvailabilityType(enum.Enum):
 class EventLogIDs:
     case: str = 'case'
     activity: str = 'activity'
-    start_timestamp: str = 'start_timestamp'
-    end_timestamp: str = 'end_timestamp'
+    start_time: str = 'start_timestamp'
+    end_time: str = 'end_timestamp'
     enabled_time: str = 'enabled_time'
     available_time: str = 'available_time'
     resource: str = 'resource'
@@ -45,16 +45,16 @@ class EventLogIDs:
 
 DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
                               activity='Activity',
-                              start_timestamp='start_time',
-                              end_timestamp='end_time',
+                              start_time='start_time',
+                              end_time='end_time',
                               enabled_time='enabled_time',
                               available_time='available_time',
                               resource='Resource',
                               lifecycle='Lifecycle')
 DEFAULT_XES_IDS = EventLogIDs(case='concept:name',
                               activity='concept:name',
-                              start_timestamp='time:start',
-                              end_timestamp='time:timestamp',
+                              start_time='time:start',
+                              end_time='time:timestamp',
                               enabled_time='time:enabled',
                               available_time='time:available',
                               resource='org:resource',

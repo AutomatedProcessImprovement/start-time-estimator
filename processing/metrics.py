@@ -27,15 +27,15 @@ def read_and_preprocess_log(event_log_path: str) -> pd.DataFrame:
     # Read from CSV
     event_log = pd.read_csv(event_log_path)
     # Transform to Timestamp bot start and end columns
-    event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
-    event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
+    event_log[DEFAULT_CSV_IDS.start_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.start_time], utc=True)
+    event_log[DEFAULT_CSV_IDS.end_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.end_time], utc=True)
     if DEFAULT_CSV_IDS.enabled_time in event_log:
         event_log[DEFAULT_CSV_IDS.enabled_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.enabled_time], utc=True)
     if DEFAULT_CSV_IDS.available_time in event_log:
         event_log[DEFAULT_CSV_IDS.available_time] = pd.to_datetime(event_log[DEFAULT_CSV_IDS.available_time], utc=True)
     # Sort by end timestamp, then by start timestamp, and then by activity name
     event_log = event_log.sort_values(
-        [DEFAULT_CSV_IDS.end_timestamp, DEFAULT_CSV_IDS.activity, DEFAULT_CSV_IDS.case, DEFAULT_CSV_IDS.resource]
+        [DEFAULT_CSV_IDS.end_time, DEFAULT_CSV_IDS.activity, DEFAULT_CSV_IDS.case, DEFAULT_CSV_IDS.resource]
     )
     # Reset the index
     event_log.reset_index(drop=True, inplace=True)
@@ -70,7 +70,7 @@ def calculate_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
     # Measure stats for estimated log
     estimated_event_log = read_and_preprocess_log(raw_path.format(method + "/" + log_name + "_estimated"))
     # Check sorting similarity
-    if not raw_event_log[DEFAULT_CSV_IDS.end_timestamp].equals(estimated_event_log[DEFAULT_CSV_IDS.end_timestamp]):
+    if not raw_event_log[DEFAULT_CSV_IDS.end_time].equals(estimated_event_log[DEFAULT_CSV_IDS.end_time]):
         print("Different 'end_timestamp' order!!")
     if not raw_event_log[DEFAULT_CSV_IDS.activity].equals(estimated_event_log[DEFAULT_CSV_IDS.activity]):
         print("Different 'activity' order!!")
@@ -78,12 +78,10 @@ def calculate_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
         print("Different 'case' order!!")
     # Print stats
     raw_processing_times = (
-                                   raw_event_log[DEFAULT_CSV_IDS.end_timestamp] -
-                                   raw_event_log[DEFAULT_CSV_IDS.start_timestamp]
+                                   raw_event_log[DEFAULT_CSV_IDS.end_time] - raw_event_log[DEFAULT_CSV_IDS.start_time]
                            ).astype(np.int64) / 1000000000
     estimated_processing_times = (
-                                         estimated_event_log[DEFAULT_CSV_IDS.end_timestamp] -
-                                         estimated_event_log[DEFAULT_CSV_IDS.start_timestamp]
+                                         estimated_event_log[DEFAULT_CSV_IDS.end_time] - estimated_event_log[DEFAULT_CSV_IDS.start_time]
                                  ).astype(np.int64) / 1000000000
     raw_minus_estimated = raw_processing_times - estimated_processing_times
     print("{}_{},{},{},{},{},{},{},{},{},{},{}".format(
@@ -93,12 +91,12 @@ def calculate_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
         mean_absolute_percentage_error(raw_processing_times, estimated_processing_times),
         mean_absolute_error(raw_processing_times, estimated_processing_times),
         len(estimated_event_log),
-        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] == estimated_event_log[DEFAULT_CSV_IDS.enabled_time]) &
-         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.available_time])).sum(),
-        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] == estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
-         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
-        ((estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
-         (estimated_event_log[DEFAULT_CSV_IDS.start_timestamp] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_time] == estimated_event_log[DEFAULT_CSV_IDS.enabled_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_time] != estimated_event_log[DEFAULT_CSV_IDS.available_time])).sum(),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_time] == estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_time] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
+        ((estimated_event_log[DEFAULT_CSV_IDS.start_time] != estimated_event_log[DEFAULT_CSV_IDS.available_time]) &
+         (estimated_event_log[DEFAULT_CSV_IDS.start_time] != estimated_event_log[DEFAULT_CSV_IDS.enabled_time])).sum(),
         (raw_minus_estimated > 0).sum(),
         (raw_minus_estimated < 0).sum(),
         (raw_minus_estimated == 0).sum()
@@ -118,9 +116,9 @@ def mean_idle_multitasking_times(event_log: pd.DataFrame) -> (float, float):
     abs_multi_times = []
     total_times = []
     for (resource, events) in event_log.groupby([DEFAULT_CSV_IDS.resource]):
-        start_times = events[DEFAULT_CSV_IDS.start_timestamp].to_frame().rename(columns={DEFAULT_CSV_IDS.start_timestamp: 'time'})
+        start_times = events[DEFAULT_CSV_IDS.start_time].to_frame().rename(columns={DEFAULT_CSV_IDS.start_time: 'time'})
         start_times['lifecycle'] = 'start'
-        end_times = events[DEFAULT_CSV_IDS.end_timestamp].to_frame().rename(columns={DEFAULT_CSV_IDS.end_timestamp: 'time'})
+        end_times = events[DEFAULT_CSV_IDS.end_time].to_frame().rename(columns={DEFAULT_CSV_IDS.end_time: 'time'})
         end_times['lifecycle'] = 'end'
         times = start_times.append(end_times).sort_values(['time', 'lifecycle'], ascending=[True, False])
         counter = 0

@@ -28,25 +28,25 @@ def run_estimation(event_log_path, configuration, output_log_path):
     extended_event_log = extended_event_log[[
         'case:{}'.format(configuration.log_ids.case),
         configuration.log_ids.activity,
-        configuration.log_ids.start_timestamp,
-        configuration.log_ids.end_timestamp,
+        configuration.log_ids.start_time,
+        configuration.log_ids.end_time,
         configuration.log_ids.enabled_time,
         configuration.log_ids.available_time,
         configuration.log_ids.resource
     ]]
     extended_event_log = extended_event_log.rename(columns={'case:{}'.format(configuration.log_ids.case): DEFAULT_CSV_IDS.case,
                                                             configuration.log_ids.activity: DEFAULT_CSV_IDS.activity,
-                                                            configuration.log_ids.start_timestamp: DEFAULT_CSV_IDS.start_timestamp,
-                                                            configuration.log_ids.end_timestamp: DEFAULT_CSV_IDS.end_timestamp,
+                                                            configuration.log_ids.start_time: DEFAULT_CSV_IDS.start_time,
+                                                            configuration.log_ids.end_time: DEFAULT_CSV_IDS.end_time,
                                                             configuration.log_ids.enabled_time: DEFAULT_CSV_IDS.enabled_time,
                                                             configuration.log_ids.available_time: DEFAULT_CSV_IDS.available_time,
                                                             configuration.log_ids.resource: DEFAULT_CSV_IDS.resource
                                                             })
     # Convert timestamp value to datetime
-    extended_event_log[DEFAULT_CSV_IDS.start_timestamp] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.start_timestamp], utc=True)
-    extended_event_log[DEFAULT_CSV_IDS.start_timestamp] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.start_timestamp])
-    extended_event_log[DEFAULT_CSV_IDS.end_timestamp] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.end_timestamp], utc=True)
-    extended_event_log[DEFAULT_CSV_IDS.end_timestamp] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.end_timestamp])
+    extended_event_log[DEFAULT_CSV_IDS.start_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.start_time], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.start_time] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.start_time])
+    extended_event_log[DEFAULT_CSV_IDS.end_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.end_time], utc=True)
+    extended_event_log[DEFAULT_CSV_IDS.end_time] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.end_time])
     extended_event_log[DEFAULT_CSV_IDS.enabled_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.enabled_time], utc=True)
     extended_event_log[DEFAULT_CSV_IDS.enabled_time] = timestamp_to_string(extended_event_log[DEFAULT_CSV_IDS.enabled_time])
     extended_event_log[DEFAULT_CSV_IDS.available_time] = pd.to_datetime(extended_event_log[DEFAULT_CSV_IDS.available_time], utc=True)

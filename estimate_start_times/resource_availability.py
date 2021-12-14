@@ -56,7 +56,7 @@ def _get_simple_resources_calendar_df(event_log: pd.DataFrame, config: Configura
     resources = {str(i) for i in event_log[config.log_ids.resource].unique()}
     resources_calendar = {}
     for resource in (resources - config.bot_resources):
-        resources_calendar[resource] = event_log[event_log[config.log_ids.resource] == resource][config.log_ids.end_timestamp]
+        resources_calendar[resource] = event_log[event_log[config.log_ids.resource] == resource][config.log_ids.end_time]
     # Return resources calendar
     return resources_calendar
 
@@ -74,6 +74,6 @@ def _get_simple_resources_calendar_el(event_log: EventLog, config: Configuration
                  attributes_filter.Parameters.POSITIVE: True}
             )
         )
-        resources_calendar[resource] = sorted(event[config.log_ids.end_timestamp] for event in resource_events)
+        resources_calendar[resource] = sorted(event[config.log_ids.end_time] for event in resource_events)
     # Super
     return resources_calendar
