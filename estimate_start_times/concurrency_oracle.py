@@ -14,14 +14,16 @@ class ConcurrencyOracle:
         self.concurrency = concurrency
         # Configuration parameters
         self.config = config
+        # Set log IDs to ease access within class
+        self.log_ids = config.log_ids
 
     def enabled_since(self, trace, event) -> datetime:
         if type(trace) is pd.DataFrame:
             # Calculate for pd.DataFrame
-            previous_time = trace[self.config.log_ids.end_timestamp].where(  # End timestamps of the events
-                (trace[self.config.log_ids.end_timestamp] < event[self.config.log_ids.end_timestamp]) &  # previous to the current one
-                ((~self.config.consider_parallelism) or (trace[self.config.log_ids.end_timestamp] < event[self.config.log_ids.start_timestamp])) &  # not overlapping (if parallel check is up)
-                (~trace[self.config.log_ids.activity].isin(self.concurrency[event[self.config.log_ids.activity]]))  # with no concurrency
+            previous_time = trace[self.log_ids.end_timestamp].where(  # End timestamps of the events
+                (trace[self.log_ids.end_timestamp] < event[self.log_ids.end_timestamp]) &  # previous to the current one
+                ((~self.config.consider_parallelism) or (trace[self.log_ids.end_timestamp] < event[self.log_ids.start_timestamp])) &  # not overlapping (if parallel check is up)
+                (~trace[self.log_ids.activity].isin(self.concurrency[event[self.log_ids.activity]]))  # with no concurrency
             ).max()  # and keeping only the last (highest) one
             if pd.isnull(previous_time):
                 # It is the first event of the trace, or all the previous events where concurrent to it
@@ -29,10 +31,10 @@ class ConcurrencyOracle:
         else:
             # Calculate for pm4py.EventLog
             previous_time = next(
-                (previous_event[self.config.log_ids.end_timestamp] for previous_event in reversed(trace) if (  # End timestamps of the events
-                        previous_event[self.config.log_ids.end_timestamp] < event[self.config.log_ids.end_timestamp] and  # previous to the current one
-                        ((not self.config.consider_parallelism) or previous_event[self.config.log_ids.end_timestamp] < event[self.config.log_ids.start_timestamp]) and  # not overlapping (if parallel check is up)
-                        previous_event[self.config.log_ids.activity] not in self.concurrency[event[self.config.log_ids.activity]]  # with no concurrency
+                (previous_event[self.log_ids.end_timestamp] for previous_event in reversed(trace) if (  # End timestamps of the events
+                        previous_event[self.log_ids.end_timestamp] < event[self.log_ids.end_timestamp] and  # previous to the current one
+                        ((not self.config.consider_parallelism) or previous_event[self.log_ids.end_timestamp] < event[self.log_ids.start_timestamp]) and  # not overlapping (if parallel check is up)
+                        previous_event[self.log_ids.activity] not in self.concurrency[event[self.log_ids.activity]]  # with no concurrency
                 )),
                 self.config.non_estimated_time
             )
