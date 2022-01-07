@@ -74,13 +74,17 @@ class StartTimeEstimator:
         )
         # Assign start timestamps
         for (key, trace) in self.event_log.groupby([self.log_ids.case]):
-            for index, event in trace.iterrows():
-                if pd.isnull(event[self.log_ids.start_time]):
-                    enabled_time = self.concurrency_oracle.enabled_since(trace, event)
-                    available_time = self.resource_availability.available_since(event[self.log_ids.resource], event[self.log_ids.end_time])
-                    self.event_log.loc[index, self.log_ids.enabled_time] = enabled_time
-                    self.event_log.loc[index, self.log_ids.available_time] = available_time
-                    self.event_log.loc[index, self.log_ids.start_time] = max(enabled_time, available_time)
+            indexes, enabled_times, available_times = [], [], []
+            for index, event in trace[pd.isnull(trace[self.log_ids.start_time])].iterrows():
+                indexes += [index]
+                enabled_times += [self.concurrency_oracle.enabled_since(trace, event)]
+                available_times += [
+                    self.resource_availability.available_since(event[self.log_ids.resource], event[self.log_ids.end_time])
+                ]
+            if len(indexes) > 0:
+                self.event_log.loc[indexes, self.log_ids.enabled_time] = enabled_times
+                self.event_log.loc[indexes, self.log_ids.available_time] = available_times
+                self.event_log.loc[indexes, self.log_ids.start_time] = [max(times) for times in zip(enabled_times, available_times)]
         # Re-estimate start time of those events with an estimated duration over the threshold
         if not math.isnan(self.config.outlier_threshold):
             self._re_estimate_durations_over_threshold()
@@ -129,8 +133,7 @@ class StartTimeEstimator:
                 duration_limit = self.config.outlier_threshold * statistic_durations[event[self.log_ids.activity]]
                 if (event[self.log_ids.start_time] != self.config.non_estimated_time and
                         (event[self.log_ids.end_time] - event[self.log_ids.start_time]) > duration_limit):
-                    self.event_log.loc[index, self.log_ids.start_time] = \
-                        event[self.log_ids.end_time] - duration_limit
+                    self.event_log.loc[index, self.log_ids.start_time] = event[self.log_ids.end_time] - duration_limit
         elif self.event_log_type == EventLogType.EVENT_LOG:
             # Take all the estimated durations of each activity
             statistic_durations = {}
@@ -159,11 +162,10 @@ class StartTimeEstimator:
         # Identify events with non_estimated as start time
         # and set their duration to instant
         if self.event_log_type == EventLogType.DATA_FRAME:
-            self.event_log[self.log_ids.start_time] = np.where(
+            self.event_log.loc[
                 self.event_log[self.log_ids.start_time] == self.config.non_estimated_time,
-                self.event_log[self.log_ids.end_time],
-                self.event_log[self.log_ids.start_time]
-            )
+                self.log_ids.start_time
+            ] = self.event_log[self.log_ids.end_time]
         elif self.event_log_type == EventLogType.EVENT_LOG:
             for trace in self.event_log:
                 for event in trace:
