@@ -14,6 +14,8 @@ class ConcurrencyOracle:
         self.concurrency = concurrency
         # Configuration parameters
         self.config = config
+        # Set non estimated time
+        self.non_estimated_time = config.non_estimated_time
         # Set log IDs to ease access within class
         self.log_ids = config.log_ids
 
@@ -28,7 +30,7 @@ class ConcurrencyOracle:
             ).max()  # keeping only the last (highest) one
             if pd.isnull(previous_time):
                 # It is the first event of the trace, or all the previous events where concurrent to it
-                previous_time = self.config.non_estimated_time
+                previous_time = self.non_estimated_time
         else:
             # Calculate for pm4py.EventLog
             previous_time = next(
@@ -38,7 +40,7 @@ class ConcurrencyOracle:
                          or previous_event[self.log_ids.end_time] < event[self.log_ids.start_time]) and  # not overlapping;
                         previous_event[self.log_ids.activity] not in self.concurrency[event[self.log_ids.activity]]  # iii) not concurrent
                 )),
-                self.config.non_estimated_time
+                self.non_estimated_time
             )
         # Return calculated value
         return previous_time
@@ -50,7 +52,7 @@ class DeactivatedConcurrencyOracle(ConcurrencyOracle):
         super(DeactivatedConcurrencyOracle, self).__init__({}, config)
 
     def enabled_since(self, trace, event) -> datetime:
-        return self.config.non_estimated_time
+        return self.non_estimated_time
 
 
 class NoConcurrencyOracle(ConcurrencyOracle):
