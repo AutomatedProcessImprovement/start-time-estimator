@@ -25,7 +25,7 @@ class ConcurrencyOracle:
             previous_time = trace[self.log_ids.end_time].where(  # End timestamps of the events:
                 (trace[self.log_ids.end_time] < event[self.log_ids.end_time]) &  # i) previous to the current one;
                 ((not self.config.consider_parallelism) or  # ii) if parallel check is activated,
-                 (trace[self.log_ids.end_time] < event[self.log_ids.start_time])) &  # not overlapping;
+                 (trace[self.log_ids.end_time] <= event[self.log_ids.start_time])) &  # not overlapping;
                 (~trace[self.log_ids.activity].isin(self.concurrency[event[self.log_ids.activity]]))  # iii) with no concurrency;
             ).max()  # keeping only the last (highest) one
             if pd.isnull(previous_time):
@@ -37,7 +37,7 @@ class ConcurrencyOracle:
                 (previous_event[self.log_ids.end_time] for previous_event in reversed(trace) if (  # End timestamps of the events:
                         previous_event[self.log_ids.end_time] < event[self.log_ids.end_time] and  # i) previous to the current one;
                         ((not self.config.consider_parallelism)  # ii) if parallel check is activated,
-                         or previous_event[self.log_ids.end_time] < event[self.log_ids.start_time]) and  # not overlapping;
+                         or previous_event[self.log_ids.end_time] <= event[self.log_ids.start_time]) and  # not overlapping;
                         previous_event[self.log_ids.activity] not in self.concurrency[event[self.log_ids.activity]]  # iii) not concurrent
                 )),
                 self.non_estimated_time
