@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='estimate_start_times',
-    version='0.3.0',
+    version='0.4.0',
     packages=find_packages(where='estimate_start_times'),
     package_dir={"": "estimate_start_times"},
     include_package_data=True,
