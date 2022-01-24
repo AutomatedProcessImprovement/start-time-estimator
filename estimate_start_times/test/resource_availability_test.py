@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from config import Configuration, DEFAULT_XES_IDS
 from event_log_readers import read_xes_log, read_csv_log
 from resource_availability import SimpleResourceAvailability
+from start_time_config import Configuration, DEFAULT_XES_IDS
 
 
 def test_resource_availability_el():

@@ -6,7 +6,7 @@ from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.objects.log.exporter.xes import exporter as xes_exporter
 from pm4py.objects.log.obj import EventLog
 
-from config import EventLogIDs, DEFAULT_CSV_IDS
+from start_time_config import EventLogIDs
 
 
 def export_event_log_only_millis(event_log: EventLog, export_path: str) -> None:

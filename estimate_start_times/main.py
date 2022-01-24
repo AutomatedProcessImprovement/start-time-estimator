@@ -3,11 +3,11 @@ import time
 import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
 
-from config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
-    HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 from estimate_start_times import StartTimeEstimator
 from event_log_readers import read_event_log
 from event_log_writers import write_event_log
+from start_time_config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
+    HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 
 
 def run_estimation(event_log_path, configuration, output_log_path):

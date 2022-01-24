@@ -3,8 +3,8 @@ from datetime import datetime
 import pm4py
 
 from concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, NoConcurrencyOracle, DeactivatedConcurrencyOracle
-from config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 from event_log_readers import read_csv_log
+from start_time_config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 
 
 def test_deactivated_concurrency_oracle():

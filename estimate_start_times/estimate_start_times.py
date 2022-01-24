@@ -9,8 +9,8 @@ from pm4py.objects.log.obj import EventLog
 
 from common import EventLogType
 from concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
-from config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from resource_availability import SimpleResourceAvailability
+from start_time_config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 
 
 class StartTimeEstimator:

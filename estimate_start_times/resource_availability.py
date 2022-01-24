@@ -6,7 +6,7 @@ import pm4py
 from pm4py.algo.filtering.log.attributes import attributes_filter
 from pm4py.objects.log.obj import EventLog
 
-from config import Configuration
+from start_time_config import Configuration
 
 
 class ResourceAvailability:
