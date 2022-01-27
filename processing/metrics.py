@@ -42,7 +42,7 @@ def read_and_preprocess_log(event_log_path: str) -> pd.DataFrame:
     return event_log
 
 
-def measure():
+def measure_estimation():
     techniques = ["heur_median", "heur_median_2", "heur_median_5",
                   "heur_mode", "heur_mode_2", "heur_mode_5",
                   "df_median", "df_median_2", "df_median_5",
@@ -63,10 +63,10 @@ def measure():
     for log_name in logs:
         raw_event_log = read_and_preprocess_log(raw_path.format(log_name))
         for technique in techniques:
-            calculate_stats(log_name, technique, raw_event_log)
+            calculate_estimation_stats(log_name, technique, raw_event_log)
 
 
-def calculate_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
+def calculate_estimation_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
     # Measure stats for estimated log
     estimated_event_log = read_and_preprocess_log(raw_path.format(method + "/" + log_name + "_estimated"))
     # Check sorting similarity
@@ -154,4 +154,4 @@ def mean_idle_multitasking_times(event_log: pd.DataFrame) -> (float, float):
 
 
 if __name__ == '__main__':
-    measure()
+    measure_estimation()

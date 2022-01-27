@@ -11,6 +11,7 @@ setup(
         'numpy',
         'pm4py',
         'statistics',
+        'scikit-learn'
     ],
     entry_points={
         'console_scripts': [
