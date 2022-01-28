@@ -8,9 +8,10 @@ import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
 from estimate_start_times.common import EventLogType
-from estimate_start_times.concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
+from estimate_start_times.concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, \
+    HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
+from estimate_start_times.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from estimate_start_times.resource_availability import SimpleResourceAvailability
-from estimate_start_times.start_time_config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 
 
 class StartTimeEstimator:

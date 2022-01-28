@@ -5,7 +5,7 @@ import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
 from estimate_start_times.common import get_activities, zip_with_next
-from estimate_start_times.start_time_config import EventLogIDs, Configuration
+from estimate_start_times.config import EventLogIDs, Configuration
 
 
 class ConcurrencyOracle:

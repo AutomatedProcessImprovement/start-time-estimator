@@ -1,8 +1,8 @@
 from datetime import datetime
 
+from estimate_start_times.config import Configuration, DEFAULT_XES_IDS
 from estimate_start_times.event_log_readers import read_xes_log, read_csv_log
 from estimate_start_times.resource_availability import SimpleResourceAvailability
-from estimate_start_times.start_time_config import Configuration, DEFAULT_XES_IDS
 
 
 def test_resource_availability_el():

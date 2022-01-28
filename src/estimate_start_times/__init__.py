@@ -1,1 +1,1 @@
-__all__ = ['estimator', 'start_time_config', 'concurrency_oracle', 'resource_availability']
+__all__ = ['estimator', 'config', 'concurrency_oracle', 'resource_availability']

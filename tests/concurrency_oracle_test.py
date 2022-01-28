@@ -4,8 +4,8 @@ import pm4py
 
 from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     NoConcurrencyOracle, DeactivatedConcurrencyOracle
+from estimate_start_times.config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 from estimate_start_times.event_log_readers import read_csv_log
-from estimate_start_times.start_time_config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 
 
 def test_deactivated_concurrency_oracle():

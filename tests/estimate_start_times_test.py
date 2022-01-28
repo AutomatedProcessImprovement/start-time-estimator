@@ -3,10 +3,10 @@ from datetime import timedelta
 
 import pandas as pd
 
+from estimate_start_times.config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, \
+    ResourceAvailabilityType, OutlierStatistic
 from estimate_start_times.estimator import StartTimeEstimator
 from estimate_start_times.event_log_readers import read_csv_log, read_xes_log
-from estimate_start_times.start_time_config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, \
-    ResourceAvailabilityType, OutlierStatistic
 
 
 def test_estimate_start_times_only_resource_df():
