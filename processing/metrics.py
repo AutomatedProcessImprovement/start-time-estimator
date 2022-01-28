@@ -1,7 +1,10 @@
+import math
+from collections import Counter
 from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+from scipy.stats import wasserstein_distance
 from sklearn.metrics import mean_absolute_error
 
 from estimate_start_times.config import DEFAULT_CSV_IDS
@@ -151,6 +154,43 @@ def mean_idle_multitasking_times(event_log: pd.DataFrame) -> (float, float):
 
     return (sum(abs_idle_times, timedelta(0)) / sum(total_times, timedelta(0)),
             sum(abs_multi_times, timedelta(0)) / sum(total_times, timedelta(0)))
+
+
+def measure_simulation():
+    techniques = ["heur_median", "heur_median_2", "heur_median_5",
+                  "heur_mode", "heur_mode_2", "heur_mode_5"]
+    print("emd")
+    for log_name in logs:
+        raw_event_log = read_and_preprocess_log(raw_path.format(log_name))
+        for technique in techniques:
+            calculate_simulation_stats(log_name, technique, raw_event_log)
+
+
+def calculate_simulation_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
+    # Measure stats for estimated log
+    simulated_event_log = read_and_preprocess_log(raw_path.format(method + "/" + log_name + "_estimated"))
+    emd = earth_movers_distance(raw_event_log, simulated_event_log)
+    print(emd)
+
+
+def earth_movers_distance(event_log_1: pd.DataFrame, event_log_2: pd.DataFrame) -> float:
+    # Get the first date of the log
+    interval_start = min(event_log_1['start_time'].min(), event_log_2['start_time'].min())
+    interval_end = max(event_log_1['end_time'].max(), event_log_2['end_time'].max())
+    # Create empty histograms
+    histogram_1 = [0] * math.floor((interval_end - interval_start).total_seconds() / 3600)
+    histogram_2 = histogram_1.copy()
+    # Increase, for each time, the value in its corresponding bin
+    absolute_hours = [difference.total_seconds() / 3600 for difference in (event_log_1['start_time'] - interval_start)]
+    absolute_hours += [difference.total_seconds() / 3600 for difference in (event_log_1['end_time'] - interval_start)]
+    for absolute_hour, frequency in Counter(absolute_hours).items():
+        histogram_1[absolute_hour] = frequency
+    absolute_hours = [difference.total_seconds() / 3600 for difference in (event_log_2['start_time'] - interval_start)]
+    absolute_hours += [difference.total_seconds() / 3600 for difference in (event_log_2['end_time'] - interval_start)]
+    for absolute_hour, frequency in Counter(absolute_hours).items():
+        histogram_2[absolute_hour] = frequency
+
+    return wasserstein_distance(histogram_1, histogram_2)
 
 
 if __name__ == '__main__':
