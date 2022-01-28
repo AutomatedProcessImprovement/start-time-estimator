@@ -2,8 +2,8 @@ from datetime import datetime
 
 import pandas as pd
 
-from estimate_start_times.utils import zip_with_next
 from estimate_start_times.config import EventLogIDs, Configuration
+from estimate_start_times.utils import zip_with_next
 
 
 class ConcurrencyOracle:
@@ -30,6 +30,34 @@ class ConcurrencyOracle:
             previous_time = self.non_estimated_time
         # Return calculated value
         return previous_time
+
+    def add_enabled_times(self, event_log: pd.DataFrame):
+        """
+        Add the enabled time of each activity instance to the received event log based on the concurrency relations established in the
+        class instance (extracted from the event log passed to the instantiation).
+
+        :param event_log: event log to add the enabled time information to.
+        """
+        # For each trace in the log, estimate the enabled time of its events
+        for (batch_key, trace) in event_log.groupby([self.log_ids.case]):
+            if self.log_ids.start_time in trace:
+                # If the log has start times, take the first one as start of the trace
+                trace_start_time = trace[self.log_ids.start_time].min()
+            else:
+                # If not, take the first complete
+                trace_start_time = trace[self.log_ids.end_time].min()
+            # Get the enabled times
+            indexes = []
+            enabled_times = []
+            for index, event in trace.iterrows():
+                indexes += [index]
+                enabled_time = self.enabled_since(trace, event)
+                if enabled_time != self.non_estimated_time:
+                    enabled_times += [enabled_time]
+                else:
+                    enabled_times += [trace_start_time]
+            # Set all trace enabled times at once
+            event_log.loc[indexes, self.log_ids.enabled_time] = enabled_times
 
 
 class DeactivatedConcurrencyOracle(ConcurrencyOracle):
