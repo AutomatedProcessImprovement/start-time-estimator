@@ -2,9 +2,10 @@ from datetime import datetime
 
 import pm4py
 
-from concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, NoConcurrencyOracle, DeactivatedConcurrencyOracle
-from event_log_readers import read_csv_log
-from start_time_config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
+from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
+    NoConcurrencyOracle, DeactivatedConcurrencyOracle
+from estimate_start_times.event_log_readers import read_csv_log
+from estimate_start_times.start_time_config import Configuration, DEFAULT_XES_IDS, HeuristicsThresholds
 
 
 def test_deactivated_concurrency_oracle():
@@ -24,7 +25,7 @@ def test_deactivated_concurrency_oracle():
 
 def test_no_concurrency_oracle_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = pm4py.read_xes('./assets/test_event_log_1.xes')
+    event_log = pm4py.read_xes('./tests/assets/test_event_log_1.xes')
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -41,7 +42,7 @@ def test_no_concurrency_oracle_el():
 
 def test_no_concurrency_oracle_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     concurrency_oracle = NoConcurrencyOracle(event_log, config)
     # No concurrency by default
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': set(), 'D': set(), 'E': set(), 'F': set(), 'G': set(),
@@ -61,7 +62,7 @@ def test_no_concurrency_oracle_df():
 
 def test_alpha_concurrency_oracle_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = pm4py.read_xes('./assets/test_event_log_1.xes')
+    event_log = pm4py.read_xes('./tests/assets/test_event_log_1.xes')
     concurrency_oracle = AlphaConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -82,7 +83,7 @@ def test_alpha_concurrency_oracle_el():
 
 def test_alpha_concurrency_oracle_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     concurrency_oracle = AlphaConcurrencyOracle(event_log, config)
     # Concurrency between the activities that appear both one before the other
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': {'D'}, 'D': {'C'}, 'E': set(),
@@ -107,7 +108,7 @@ def test_alpha_concurrency_oracle_df():
 
 def test_heuristics_concurrency_oracle_simple_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = pm4py.read_xes('./assets/test_event_log_1.xes')
+    event_log = pm4py.read_xes('./tests/assets/test_event_log_1.xes')
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -128,7 +129,7 @@ def test_heuristics_concurrency_oracle_simple_el():
 
 def test_heuristics_concurrency_oracle_simple_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # Concurrency between the activities that appear both one before the other
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': {'D'}, 'D': {'C'}, 'E': set(),
@@ -153,7 +154,7 @@ def test_heuristics_concurrency_oracle_simple_df():
 
 def test_heuristics_concurrency_oracle_multi_parallel_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = pm4py.read_xes('./assets/test_event_log_3.xes')
+    event_log = pm4py.read_xes('./tests/assets/test_event_log_3.xes')
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -173,7 +174,7 @@ def test_heuristics_concurrency_oracle_multi_parallel_el():
 
 def test_heuristics_concurrency_oracle_multi_parallel_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_3.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_3.csv', config)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -193,7 +194,7 @@ def test_heuristics_concurrency_oracle_multi_parallel_df():
 
 def test_heuristics_concurrency_oracle_multi_parallel_noise_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = pm4py.read_xes('./assets/test_event_log_3_noise.xes')
+    event_log = pm4py.read_xes('./tests/assets/test_event_log_3_noise.xes')
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -232,7 +233,7 @@ def test_heuristics_concurrency_oracle_multi_parallel_noise_el():
 
 def test_heuristics_concurrency_oracle_multi_parallel_noise_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_3_noise.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_3_noise.csv', config)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config

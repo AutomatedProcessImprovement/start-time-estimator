@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
 
-from start_time_config import DEFAULT_CSV_IDS
+from estimate_start_times.start_time_config import DEFAULT_CSV_IDS
 
 logs = [
     "insurance",

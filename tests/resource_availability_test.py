@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from event_log_readers import read_xes_log, read_csv_log
-from resource_availability import SimpleResourceAvailability
-from start_time_config import Configuration, DEFAULT_XES_IDS
+from estimate_start_times.event_log_readers import read_xes_log, read_csv_log
+from estimate_start_times.resource_availability import SimpleResourceAvailability
+from estimate_start_times.start_time_config import Configuration, DEFAULT_XES_IDS
 
 
 def test_resource_availability_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS)
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
@@ -42,7 +42,7 @@ def test_resource_availability_el():
 
 def test_resource_availability_df():
     config = Configuration()
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
@@ -80,7 +80,7 @@ def test_resource_availability_df():
 
 def test_resource_availability_bot_resources_el():
     config = Configuration(log_ids=DEFAULT_XES_IDS, bot_resources={'Marcus', 'Dominic'})
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
@@ -105,7 +105,7 @@ def test_resource_availability_bot_resources_el():
 
 def test_resource_availability_bot_resources_df():
     config = Configuration(bot_resources={'Marcus', 'Dominic'})
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     resource_availability = SimpleResourceAvailability(event_log, config)
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config

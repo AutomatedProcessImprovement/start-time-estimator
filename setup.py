@@ -2,9 +2,8 @@ from setuptools import setup, find_packages
 
 setup(
     name='estimate_start_times',
-    version='0.4.0',
-    packages=find_packages(where='estimate_start_times'),
-    package_dir={"": "estimate_start_times"},
+    version='0.5.0',
+    package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
         'pandas',

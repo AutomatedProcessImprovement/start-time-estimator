@@ -3,9 +3,10 @@ from datetime import timedelta
 
 import pandas as pd
 
-from start_time_config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
-from estimate_start_times.estimate_start_times import StartTimeEstimator
-from event_log_readers import read_csv_log, read_xes_log
+from estimate_start_times.estimator import StartTimeEstimator
+from estimate_start_times.event_log_readers import read_csv_log, read_xes_log
+from estimate_start_times.start_time_config import ConcurrencyOracleType, Configuration, DEFAULT_XES_IDS, ReEstimationMethod, \
+    ResourceAvailabilityType, OutlierStatistic
 
 
 def test_estimate_start_times_only_resource_df():
@@ -14,7 +15,7 @@ def test_estimate_start_times_only_resource_df():
         concurrency_oracle_type=ConcurrencyOracleType.DEACTIVATED,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -41,7 +42,7 @@ def test_estimate_start_times_only_resource_el():
         concurrency_oracle_type=ConcurrencyOracleType.DEACTIVATED,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -62,7 +63,7 @@ def test_estimate_start_times_instant_df():
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Set one start timestamp manually
     manually_added_timestamp = pd.to_datetime('2002-11-07 12:33:00+02:00', format='%Y-%m-%d %H:%M:%S%z', utc=True)
     event_log.loc[
@@ -98,7 +99,7 @@ def test_estimate_start_times_instant_el():
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     # Set one start timestamp manually
     manually_added_timestamp = datetime.strptime('2002-11-07 12:33:00+02:00', '%Y-%m-%d %H:%M:%S%z')
     event_log[0][2][config.log_ids.start_time] = manually_added_timestamp
@@ -128,7 +129,7 @@ def test_bot_resources_and_instant_activities_df():
         bot_resources={'Marcus'},
         instant_activities={'H', 'I'}
     )
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -162,7 +163,7 @@ def test_bot_resources_and_instant_activities_el():
         bot_resources={'Marcus'},
         instant_activities={'H', 'I'}
     )
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -191,7 +192,7 @@ def test_repair_activities_with_duration_over_threshold_df():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=1.6
     )
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -224,7 +225,7 @@ def test_repair_activities_with_duration_over_threshold_el():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=1.6
     )
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -250,7 +251,7 @@ def test_estimate_start_times_mode_df():
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -271,7 +272,7 @@ def test_estimate_start_times_mode_el():
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_xes_log('./assets/test_event_log_1.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_1.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -289,7 +290,7 @@ def test_set_instant_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._set_instant_non_estimated_start_times()
@@ -309,7 +310,7 @@ def test_set_instant_non_estimated_start_times_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._set_instant_non_estimated_start_times()
@@ -326,7 +327,7 @@ def test_set_mode_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -346,7 +347,7 @@ def test_set_mode_non_estimated_start_times_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -363,7 +364,7 @@ def test_set_mean_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -383,7 +384,7 @@ def test_set_mean_non_estimated_start_times_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -401,7 +402,7 @@ def test_set_median_non_estimated_start_times_df():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_csv_log('./assets/test_event_log_2.csv', config, False)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config, False)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -421,7 +422,7 @@ def test_set_median_non_estimated_start_times_el():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     start_time_estimator._re_estimate_non_estimated_start_times()
@@ -446,7 +447,7 @@ def test_get_activity_duration():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
     assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(4)
@@ -460,7 +461,7 @@ def test_get_activity_duration():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
     assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(3)
@@ -474,7 +475,7 @@ def test_get_activity_duration():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
     )
-    event_log = read_xes_log('./assets/test_event_log_2.xes', config)
+    event_log = read_xes_log('./tests/assets/test_event_log_2.xes', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(2)
     assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(2)

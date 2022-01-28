@@ -4,8 +4,8 @@ from typing import Union
 import pandas as pd
 from pm4py.objects.log.obj import EventLog
 
-from common import get_activities, zip_with_next
-from start_time_config import EventLogIDs, Configuration
+from estimate_start_times.common import get_activities, zip_with_next
+from estimate_start_times.start_time_config import EventLogIDs, Configuration
 
 
 class ConcurrencyOracle:

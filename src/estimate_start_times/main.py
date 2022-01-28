@@ -3,11 +3,11 @@ import time
 import pandas as pd
 from pm4py.objects.conversion.log import converter as log_converter
 
-from estimate_start_times import StartTimeEstimator
-from event_log_readers import read_event_log
-from event_log_writers import write_event_log
-from start_time_config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, ResourceAvailabilityType, \
-    HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
+from estimate_start_times.estimator import StartTimeEstimator
+from estimate_start_times.event_log_readers import read_event_log
+from estimate_start_times.event_log_writers import write_event_log
+from estimate_start_times.start_time_config import Configuration, DEFAULT_XES_IDS, ReEstimationMethod, ConcurrencyOracleType, \
+    ResourceAvailabilityType, HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 
 
 def run_estimation(event_log_path, configuration, output_log_path):
@@ -81,7 +81,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/confidential.xes.gz", config,
+    run_estimation("../../event_logs/confidential.xes.gz", config,
                    "../event_logs/{}/confidential_estimated.csv.gz".format(folder))
 
     # CVS Pharmacy
@@ -95,7 +95,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/cvs_pharmacy.xes.gz", config,
+    run_estimation("../../event_logs/cvs_pharmacy.xes.gz", config,
                    "../event_logs/{}/cvs_pharmacy_estimated.csv.gz".format(folder))
 
     # Loan Application
@@ -109,7 +109,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/Loan_Application.xes.gz", config,
+    run_estimation("../../event_logs/Loan_Application.xes.gz", config,
                    "../event_logs/{}/Loan_Application_estimated.csv.gz".format(folder))
 
     # Procure to Pay
@@ -122,7 +122,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/Procure_to_Pay.xes.gz", config,
+    run_estimation("../../event_logs/Procure_to_Pay.xes.gz", config,
                    "../event_logs/{}/Procure_to_Pay_estimated.csv.gz".format(folder))
 
     # ------------------------------- #
@@ -139,7 +139,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/Application_to_Approval_Government_Agency.xes.gz", config,
+    run_estimation("../../event_logs/Application_to_Approval_Government_Agency.xes.gz", config,
                    "../event_logs/{}/Application_to_Approval_Government_Agency_estimated.csv.gz".format(folder))
 
     # BPIC 2012
@@ -152,7 +152,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz", config,
+    run_estimation("../../event_logs/BPI_Challenge_2012_W_Two_TS.xes.gz", config,
                    "../event_logs/{}/BPI_Challenge_2012_W_Two_TS_estimated.csv.gz".format(folder))
 
     # BPIC 2017
@@ -165,7 +165,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/BPI_Challenge_2017_W_Two_TS.xes.gz", config,
+    run_estimation("../../event_logs/BPI_Challenge_2017_W_Two_TS.xes.gz", config,
                    "../event_logs/{}/BPI_Challenge_2017_W_Two_TS_estimated.csv.gz".format(folder))
 
     # Call centre
@@ -178,7 +178,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/callcentre.xes.gz", config,
+    run_estimation("../../event_logs/callcentre.xes.gz", config,
                    "../event_logs/{}/callcentre_estimated.csv.gz".format(folder))
 
     # Consulta Data Mining 2016 - 2018
@@ -192,7 +192,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/ConsultaDataMining201618.xes.gz", config,
+    run_estimation("../../event_logs/ConsultaDataMining201618.xes.gz", config,
                    "../event_logs/{}/ConsultaDataMining201618_estimated.csv.gz".format(folder))
 
     # Insurance
@@ -205,7 +205,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/insurance.xes.gz", config,
+    run_estimation("../../event_logs/insurance.xes.gz", config,
                    "../event_logs/{}/insurance_estimated.csv.gz".format(folder))
 
     # POC Process Mining
@@ -218,7 +218,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/poc_processmining.xes.gz", config,
+    run_estimation("../../event_logs/poc_processmining.xes.gz", config,
                    "../event_logs/{}/poc_processmining_estimated.csv.gz".format(folder))
 
     # Production
@@ -231,7 +231,7 @@ def main():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=outlier_threshold
     )
-    run_estimation("../event_logs/Production.xes.gz", config,
+    run_estimation("../../event_logs/Production.xes.gz", config,
                    "../event_logs/{}/Production_estimated.csv.gz".format(folder))
 
 
