@@ -97,6 +97,8 @@ def absolute_hour_emd(
     else:
         interval_start = min(event_log_1[log_1_ids.end_time].min(), event_log_2[log_2_ids.end_time].min())
         interval_end = max(event_log_1[log_1_ids.end_time].max(), event_log_2[log_2_ids.end_time].max())
+    interval_start = interval_start.replace(minute=0, second=0, microsecond=0, nanosecond=0)
+    interval_end = (interval_end + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0, nanosecond=0)
     # Create empty histograms
     histogram_1 = [0] * (discretize((interval_end - interval_start).total_seconds()) + 1)
     histogram_2 = histogram_1.copy()
