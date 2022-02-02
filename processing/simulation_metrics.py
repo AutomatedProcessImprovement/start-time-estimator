@@ -2,7 +2,6 @@ import datetime
 import enum
 import math
 import os
-from collections import Counter
 
 import pandas as pd
 from scipy.stats import wasserstein_distance
@@ -90,44 +89,33 @@ def absolute_hour_emd(
     # Get the first and last dates of the log
     if emd_type == _EmdType.BOTH:
         interval_start = min(event_log_1[log_1_ids.start_time].min(), event_log_2[log_2_ids.start_time].min())
-        interval_end = max(event_log_1[log_1_ids.end_time].max(), event_log_2[log_2_ids.end_time].max())
     elif emd_type == _EmdType.START:
         interval_start = min(event_log_1[log_1_ids.start_time].min(), event_log_2[log_2_ids.start_time].min())
-        interval_end = max(event_log_1[log_1_ids.start_time].max(), event_log_2[log_2_ids.start_time].max())
     else:
         interval_start = min(event_log_1[log_1_ids.end_time].min(), event_log_2[log_2_ids.end_time].min())
-        interval_end = max(event_log_1[log_1_ids.end_time].max(), event_log_2[log_2_ids.end_time].max())
     interval_start = interval_start.replace(minute=0, second=0, microsecond=0, nanosecond=0)
-    interval_end = (interval_end + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0, nanosecond=0)
-    # Create empty histograms
-    histogram_1 = [0] * (discretize((interval_end - interval_start).total_seconds()) + 1)
-    histogram_2 = histogram_1.copy()
-    # Increase, for each time, the value in its corresponding bin
-    absolute_hours = []
+    # Discretize each instant to its corresponding "bin"
+    discretized_instants_1 = []
     if emd_type != _EmdType.END:
-        absolute_hours += [
+        discretized_instants_1 += [
             discretize(difference.total_seconds()) for difference in (event_log_1[log_1_ids.start_time] - interval_start)
         ]
     if emd_type != _EmdType.START:
-        absolute_hours += [
+        discretized_instants_1 += [
             discretize(difference.total_seconds()) for difference in (event_log_1[log_1_ids.end_time] - interval_start)
         ]
-    for absolute_hour, frequency in Counter(absolute_hours).items():
-        histogram_1[absolute_hour] = frequency
-    # Increase, for each time, the value in its corresponding bin
-    absolute_hours = []
+    # Discretize each instant to its corresponding "bin"
+    discretized_instants_2 = []
     if emd_type != _EmdType.END:
-        absolute_hours += [
+        discretized_instants_2 += [
             discretize(difference.total_seconds()) for difference in (event_log_2[log_2_ids.start_time] - interval_start)
         ]
     if emd_type != _EmdType.START:
-        absolute_hours += [
+        discretized_instants_2 += [
             discretize(difference.total_seconds()) for difference in (event_log_2[log_2_ids.end_time] - interval_start)
         ]
-    for absolute_hour, frequency in Counter(absolute_hours).items():
-        histogram_2[absolute_hour] = frequency
     # Return EMD metric
-    return wasserstein_distance(histogram_1, histogram_2)
+    return wasserstein_distance(discretized_instants_1, discretized_instants_2)
 
 
 def trace_duration_emd(
@@ -137,29 +125,20 @@ def trace_duration_emd(
         log_2_ids: EventLogIDs,
         bin_size: datetime.timedelta
 ) -> float:
-    # Get trace durations for both logs
+    # Get trace durations of each trace for the first log
     trace_durations_1 = []
     for case, events in event_log_1.groupby([log_1_ids.case]):
         trace_durations_1 += [events[log_1_ids.end_time].max() - events[log_1_ids.start_time].min()]
+    # Get trace durations of each trace for the second log
     trace_durations_2 = []
     for case, events in event_log_2.groupby([log_2_ids.case]):
         trace_durations_2 += [events[log_2_ids.end_time].max() - events[log_2_ids.start_time].min()]
-    # Get size of the bin
+    # Discretize each instant to its corresponding "bin"
     min_duration = min(trace_durations_1 + trace_durations_2)
-    max_duration = max(trace_durations_1 + trace_durations_2)
-    num_bins = math.floor((max_duration - min_duration) / bin_size) + 1
-    # Create empty histograms
-    histogram_1 = [0] * num_bins
-    histogram_2 = histogram_1.copy()
-    # Increase, for each duration, the value in its corresponding bin
-    for trace_duration in trace_durations_1:
-        bin_index = math.floor((trace_duration - min_duration) / bin_size)
-        histogram_1[bin_index] += 1
-    for trace_duration in trace_durations_2:
-        bin_index = math.floor((trace_duration - min_duration) / bin_size)
-        histogram_2[bin_index] += 1
+    discretized_durations_1 = [math.floor((trace_duration - min_duration) / bin_size) for trace_duration in trace_durations_1]
+    discretized_durations_2 = [math.floor((trace_duration - min_duration) / bin_size) for trace_duration in trace_durations_2]
     # Return EMD metric
-    return wasserstein_distance(histogram_1, histogram_2)
+    return wasserstein_distance(discretized_durations_1, discretized_durations_2)
 
 
 if __name__ == '__main__':
