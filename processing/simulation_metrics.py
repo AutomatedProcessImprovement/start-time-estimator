@@ -4,23 +4,24 @@ import math
 import os
 
 import pandas as pd
+from numpy import median
 from scipy.stats import wasserstein_distance
 
 from estimate_start_times.config import DEFAULT_CSV_IDS, EventLogIDs
 from start_time_metrics import read_and_preprocess_log
 
 logs = [
-    "insurance",
+    # "insurance",
     "BPI_Challenge_2012_W_Two_TS",
-    "BPI_Challenge_2017_W_Two_TS",
-    # "Application_to_Approval_Government_Agency",
-    "callcentre",
-    "ConsultaDataMining201618",
-    # "poc_processmining",
-    "Production"
+    # "BPI_Challenge_2017_W_Two_TS",
+    "Application_to_Approval_Government_Agency",
+    # "callcentre",
+    # "ConsultaDataMining201618",
+    "poc_processmining",
+    # "Production"
 ]
 raw_path = "../event_logs/{}.csv.gz"
-simulated_logs_path = "../event_logs/simulated/{}/{}/{}_simulated_1.csv"
+simulated_logs_path = "../event_logs/simulated/{}/{}/{}_simulated_{}.csv"
 simulated_log_IDs = EventLogIDs(
     case="caseid",
     activity="task",
@@ -38,8 +39,7 @@ class _EmdType(enum.Enum):
 
 def measure_simulation():
     techniques = ["raw", "heur_median", "heur_median_2", "heur_median_5", "heur_mode", "heur_mode_2", "heur_mode_5"]
-    print("dataset,simulated_from,start_time_hour_emd,end_time_hour_emd,absolute_hour_emd,"
-          "start_time_day_emd,end_time_day_emd,absolute_day_emd,trace_duration_emd")
+    print("dataset,simulated_from,start_time_hour_emd,end_time_hour_emd,start_end_hour_emd,trace_duration_emd")
     for log_name in logs:
         raw_event_log = read_and_preprocess_log(raw_path.format(log_name), DEFAULT_CSV_IDS)
         for technique in techniques:
@@ -48,26 +48,29 @@ def measure_simulation():
 
 def calculate_simulation_stats(log_name: str, method: str, raw_event_log: pd.DataFrame):
     # Measure stats for estimated log
-    simulated_log_path = simulated_logs_path.format(log_name, method, log_name)
-    if os.path.exists(simulated_log_path):
-        simulated_event_log = read_and_preprocess_log(simulated_log_path, simulated_log_IDs)
-        simulated_event_log = simulated_event_log[~simulated_event_log[simulated_log_IDs.activity].isin(['Start', 'End'])]
-        # Calculate cycle time bin size w.r.t. the original log
-        bin_size = max(
-            [events[DEFAULT_CSV_IDS.end_time].max() - events[DEFAULT_CSV_IDS.start_time].min()
-             for case, events in raw_event_log.groupby([DEFAULT_CSV_IDS.case])]
-        ) / 100
-        print("{},{},{},{},{},{},{},{},{}".format(
-            log_name,
-            method,
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.START, discretize_to_hour),
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.END, discretize_to_hour),
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.BOTH, discretize_to_hour),
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.START, discretize_to_day),
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.END, discretize_to_day),
-            absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.BOTH, discretize_to_day),
-            trace_duration_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, bin_size)
-        ))
+    start_emd, end_emd, both_emd, duration_emd = [], [], [], []
+    for i in range(1, 6):
+        simulated_log_path = simulated_logs_path.format(log_name, method, log_name, i)
+        if os.path.exists(simulated_log_path):
+            simulated_event_log = read_and_preprocess_log(simulated_log_path, simulated_log_IDs)
+            simulated_event_log = simulated_event_log[~simulated_event_log[simulated_log_IDs.activity].isin(['Start', 'End'])]
+            # Calculate cycle time bin size w.r.t. the original log
+            bin_size = max(
+                [events[DEFAULT_CSV_IDS.end_time].max() - events[DEFAULT_CSV_IDS.start_time].min()
+                 for case, events in raw_event_log.groupby([DEFAULT_CSV_IDS.case])]
+            ) / 100
+            start_emd += [absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.START)]
+            end_emd += [absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.END)]
+            both_emd += [absolute_hour_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, _EmdType.BOTH)]
+            duration_emd += [trace_duration_emd(raw_event_log, DEFAULT_CSV_IDS, simulated_event_log, simulated_log_IDs, bin_size)]
+    print("{},{},{},{},{},{}".format(
+        log_name,
+        method,
+        median(start_emd),
+        median(end_emd),
+        median(both_emd),
+        median(duration_emd)
+    ))
 
 
 def discretize_to_hour(seconds: int):
@@ -93,7 +96,7 @@ def absolute_hour_emd(
         interval_start = min(event_log_1[log_1_ids.start_time].min(), event_log_2[log_2_ids.start_time].min())
     else:
         interval_start = min(event_log_1[log_1_ids.end_time].min(), event_log_2[log_2_ids.end_time].min())
-    interval_start = interval_start.replace(minute=0, second=0, microsecond=0, nanosecond=0)
+    interval_start = interval_start.floor(freq='H')
     # Discretize each instant to its corresponding "bin"
     discretized_instants_1 = []
     if emd_type != _EmdType.END:
