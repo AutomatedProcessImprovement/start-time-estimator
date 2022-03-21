@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
@@ -109,48 +107,6 @@ def symmetric_mean_absolute_percentage_error(actual, forecast) -> float:
 
 def mean_absolute_percentage_error(actual, forecast) -> float:
     return np.sum(np.abs(forecast - actual) / np.abs(actual)) / len(actual)
-
-
-def mean_idle_multitasking_times(event_log: pd.DataFrame, log_ids: EventLogIDs) -> (float, float):
-    abs_idle_times = []
-    abs_multi_times = []
-    total_times = []
-    for (resource, events) in event_log.groupby([log_ids.resource]):
-        start_times = events[log_ids.start_time].to_frame().rename(columns={log_ids.start_time: 'time'})
-        start_times['lifecycle'] = 'start'
-        end_times = events[log_ids.end_time].to_frame().rename(columns={log_ids.end_time: 'time'})
-        end_times['lifecycle'] = 'end'
-        times = start_times.append(end_times).sort_values(['time', 'lifecycle'], ascending=[True, False])
-        counter = 0
-        idle_time = timedelta(0)
-        multi_time = timedelta(0)
-        start_idle_time = times['time'].min()
-        total_time = times['time'].max() - times['time'].min()
-        for time, lifecycle in times.itertuples(index=False):
-            if lifecycle == 'start':
-                counter += 1
-                if counter == 1:
-                    # Idle time has finished
-                    idle_time += time - start_idle_time
-                elif counter == 2:
-                    # Multitasking time starting
-                    start_multi_time = time
-            else:
-                counter -= 1
-                if counter < 0:
-                    print("Error, wrong sorting, ending an activity without having another one started.")
-                elif counter == 0:
-                    # Idle time starts again
-                    start_idle_time = time
-                elif counter == 1:
-                    # Ends multitasking time
-                    multi_time += time - start_multi_time
-        abs_idle_times += [idle_time]
-        abs_multi_times += [multi_time]
-        total_times += [total_time]
-
-    return (sum(abs_idle_times, timedelta(0)) / sum(total_times, timedelta(0)),
-            sum(abs_multi_times, timedelta(0)) / sum(total_times, timedelta(0)))
 
 
 if __name__ == '__main__':
