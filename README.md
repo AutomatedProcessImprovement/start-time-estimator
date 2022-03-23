@@ -49,7 +49,7 @@ configuration = Configuration(
 
 #### Configuration of the proposed approach
 
-With no outlier threshold and using the Median as a statistic to calculate the most typical duration:
+With no outlier threshold and using the Median as the statistic to re-estimate the activity instances that couldn't be estimated:
 
 ```python
 # Set up custom configuration
@@ -60,7 +60,7 @@ configuration = Configuration(
 )
 ```
 
-With no outlier threshold and using the Mode as a statistic to calculate the most typical duration:
+With no outlier threshold and using the Mode as the statistic to re-estimate the activity instances that couldn't be estimated:
 
 ```python
 # Set up custom configuration
@@ -83,7 +83,7 @@ configuration = Configuration(
 )
 ```
 
-Add an outlier threshold of 200% and set the Mode to re-estimate outlier estimations too:
+Add an outlier threshold of 200% and set the Mode to calculate the most typical duration too:
 
 ```python
 # Set up custom configuration
