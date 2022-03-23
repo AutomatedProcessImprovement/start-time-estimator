@@ -142,7 +142,7 @@ configuration = Configuration(
 )
 ```
 
-### Individual Enablement Time Calculation
+## Individual Enablement Time Calculation
 
 This package can be used too to calculate the enablement time of the activity instances of an event log, without the need to calculate the resource availability and estimate the start times. A simple example can be found here:
 
