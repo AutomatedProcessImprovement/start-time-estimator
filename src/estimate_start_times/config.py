@@ -89,12 +89,12 @@ class Configuration:
         consider_parallelism        Consider start times when checking for the enabled time of an activity in the concurrency oracle, if
                                     'true', do not consider the events which end time is after the start time of the current activity
                                     instance, they overlap so no causality between them.
-        outlier_statistic           Statistic (e.g. median) to calculate from the distribution of each activity durations to consider and
-                                    re-estimate the outlier events which estimated duration is higher.
+        outlier_statistic           Statistic (e.g. median) to calculate the most typical duration from the distribution of each activity
+                                    durations to consider and re-estimate the outlier events which estimated duration is higher.
         outlier_threshold           Threshold to control outliers, those events with estimated durations over
     """
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
-    concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.ALPHA
+    concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.HEURISTICS
     resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
     missing_resource: str = "NOT_SET"
     non_estimated_time: pd.Timestamp = pd.Timestamp.min.tz_localize(tz=pytz.UTC) + timedelta(seconds=1)

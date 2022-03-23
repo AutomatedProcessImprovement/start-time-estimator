@@ -10,7 +10,7 @@ def zip_with_next(iterable):
     return zip(a, b)
 
 
-def read_csv_log(log_path, config, reset_start_times=True) -> pd.DataFrame:
+def read_csv_log(log_path, config, reset_start_times=True, sort_by_end_time=True) -> pd.DataFrame:
     # Read log
     event_log = pd.read_csv(log_path)
     # If the events have a lifecycle, retain only 'complete'
@@ -31,7 +31,8 @@ def read_csv_log(log_path, config, reset_start_times=True) -> pd.DataFrame:
     else:
         event_log[config.log_ids.start_time] = pd.to_datetime(event_log[config.log_ids.start_time], utc=True)
     # Sort by end time
-    event_log = event_log.sort_values(config.log_ids.end_time)
+    if sort_by_end_time:
+        event_log = event_log.sort_values(config.log_ids.end_time)
     # Return parsed event log
     return event_log
 
