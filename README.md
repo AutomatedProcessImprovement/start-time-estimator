@@ -1,7 +1,5 @@
 # Start Time Estimator
 
-Python implementation of the start time estimation technique presented in the paper "Estimating Activity Start Times for Business Process Simulation", by David Chapela-Campa and Marlon Dumas.
-
 The technique takes as input an event log (pd.DataFrame) recording the execution of the activities of a process (including resource information), and produces a version of that event log with estimated start times for each activity instance.
 
 ## Requirements
