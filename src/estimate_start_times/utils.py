@@ -10,7 +10,7 @@ def zip_with_next(iterable):
     return zip(a, b)
 
 
-def read_csv_log(log_path, config, reset_start_times=True, sort_by_end_time=True) -> pd.DataFrame:
+def read_csv_log(log_path, config, sort_by_end_time=True) -> pd.DataFrame:
     # Read log
     event_log = pd.read_csv(log_path)
     # If the events have a lifecycle, retain only 'complete'
@@ -25,10 +25,7 @@ def read_csv_log(log_path, config, reset_start_times=True, sort_by_end_time=True
         event_log[config.log_ids.resource].fillna(config.missing_resource, inplace=True)
     # Convert timestamp value to datetime
     event_log[config.log_ids.end_time] = pd.to_datetime(event_log[config.log_ids.end_time], utc=True)
-    # Set as NaT the start time
-    if reset_start_times:
-        event_log[config.log_ids.start_time] = pd.NaT
-    else:
+    if config.log_ids.start_time in event_log.columns:
         event_log[config.log_ids.start_time] = pd.to_datetime(event_log[config.log_ids.start_time], utc=True)
     # Sort by end time
     if sort_by_end_time:

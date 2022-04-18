@@ -1,4 +1,4 @@
-Resource,Activity,start_time,end_time,case_id
+Resource,Activity,estimated_start_time,end_time,case_id
 Marcus,A,2000-01-01 10:00:00+02:00,2006-11-07 10:30:00+02:00,trace-01
 Marcus,B,2006-11-07 11:10:00+02:00,2006-11-07 11:30:00+02:00,trace-01
 Marcus,C,2006-11-07 12:50:00+02:00,2006-11-07 13:00:00+02:00,trace-01
