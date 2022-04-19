@@ -95,10 +95,12 @@ class Configuration:
                                         be set as instant).
         replace_recorded_start_times    If 'true', replace the start time column with the estimated start times,
                                         if 'false', the estimation is placed in its own column.
-        consider_parallelism            Consider start times when checking for the enabled time of an activity in
+        consider_start_times            Consider start times when checking for the enabled time of an activity in
                                         the concurrency oracle, if 'true', do not consider the events which end
                                         time is after the start time of the current activity instance, they overlap
-                                        so no causality between them.
+                                        so no causality between them. In the case of the resource availability, if
+                                        'true', search the availability as the previous end before the start of the
+                                        current activity, not its end.
         outlier_statistic               Statistic (e.g. median) to calculate the most typical duration from the
                                         distribution of each activity durations to consider and re-estimate the
                                         outlier events which estimated duration is higher.
@@ -115,6 +117,6 @@ class Configuration:
     heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
     reuse_current_start_times: bool = False
     replace_recorded_start_times: bool = False
-    consider_parallelism: bool = False
+    consider_start_times: bool = False
     outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
     outlier_threshold: float = float('nan')

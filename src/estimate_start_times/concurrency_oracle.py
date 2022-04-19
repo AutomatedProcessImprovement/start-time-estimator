@@ -21,7 +21,7 @@ class ConcurrencyOracle:
         # Calculate for pd.DataFrame
         previous_time = trace[self.log_ids.end_time].where(  # End timestamps of the events:
             (trace[self.log_ids.end_time] < event[self.log_ids.end_time]) &  # i) previous to the current one;
-            ((not self.config.consider_parallelism) or  # ii) if parallel check is activated,
+            ((not self.config.consider_start_times) or  # ii) if parallel check is activated,
              (trace[self.log_ids.end_time] <= event[self.log_ids.start_time])) &  # not overlapping;
             (~trace[self.log_ids.activity].isin(self.concurrency[event[self.log_ids.activity]]))  # iii) with no concurrency;
         ).max()  # keeping only the last (highest) one

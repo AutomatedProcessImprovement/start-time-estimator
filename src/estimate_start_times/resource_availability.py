@@ -12,22 +12,22 @@ class ResourceAvailability:
         # Configuration parameters
         self.config = config
 
-    def available_since(self, resource: str, timestamp: datetime) -> datetime:
+    def available_since(self, resource: str, event) -> datetime:
         if resource == self.config.missing_resource:
             # If the resource is missing return [non_estimated_time]
             timestamp_previous_event = self.config.non_estimated_time
         elif resource in self.config.bot_resources:
             # If the resource has been marked as 'bot resource', return the same timestamp
-            timestamp_previous_event = timestamp
+            timestamp_previous_event = event[self.config.log_ids.end_time]
         else:
             # If not, take the first timestamp previous to [timestamp]
             resource_calendar = self.resources_calendar[resource]
-            if type(resource_calendar) is pd.Series:
-                timestamp_previous_event = resource_calendar.where(resource_calendar < timestamp).max()
-                if pd.isna(timestamp_previous_event):
-                    timestamp_previous_event = self.config.non_estimated_time
-            else:
-                timestamp_previous_event = next((t for t in reversed(resource_calendar) if t < timestamp), self.config.non_estimated_time)
+            timestamp_previous_event = resource_calendar.where(
+                (resource_calendar < event[self.config.log_ids.end_time]) &
+                ((not self.config.consider_start_times) or (resource_calendar <= event[self.config.log_ids.start_time]))
+            ).max()
+            if pd.isna(timestamp_previous_event):
+                timestamp_previous_event = self.config.non_estimated_time
         return timestamp_previous_event
 
 

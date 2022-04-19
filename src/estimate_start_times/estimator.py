@@ -65,7 +65,7 @@ class StartTimeEstimator:
                 indexes += [index]
                 enabled_times += [self.concurrency_oracle.enabled_since(trace, event)]
                 available_times += [
-                    self.resource_availability.available_since(event[self.log_ids.resource], event[self.log_ids.end_time])
+                    self.resource_availability.available_since(event[self.log_ids.resource], event)
                 ]
             if len(indexes) > 0:
                 self.event_log.loc[indexes, self.log_ids.enabled_time] = enabled_times
