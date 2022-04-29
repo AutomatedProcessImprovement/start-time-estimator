@@ -10,10 +10,5 @@ setup(
         'numpy',
         'statistics',
         'scikit-learn'
-    ],
-    entry_points={
-        'console_scripts': [
-            'estimate_start_times = main:main',
-        ]
-    }
+    ]
 )
