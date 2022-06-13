@@ -148,7 +148,7 @@ This package can be used too to calculate the enablement time of the activity in
 # Set up default configuration
 configuration = Configuration(
     log_ids=DEFAULT_CSV_IDS,  # Custom the column IDs with this parameter
-    consider_parallelism=True  # Consider real parallelism if the start times are available
+    consider_start_times=True  # Consider real parallelism if the start times are available
 )
 # Read event log
 event_log = read_csv_log(
@@ -164,8 +164,8 @@ concurrency_oracle = HeuristicsConcurrencyOracle(event_log, configuration)
 concurrency_oracle.add_enabled_times(event_log)
 ```
 
-**Warning:** If the event log contains start times, set the parameter *consider_parallelism* to *true*. This parameter allows the enablement time calculator to know that it can trust the start times of the event log to discard those activity instances that are being executed in parallel to the current one as a possible causal predecessor. 
+**Warning:** If the event log contains start times, set the parameter *consider_start_times* to *true*. This parameter allows the enablement time calculator to know that it can trust the start times of the event log to discard those activity instances that are being executed in parallel to the current one as a possible causal predecessor. 
 
 For example: if activity *A* always preceedes activity *B*, i.e. there are no concurrency, an execution of *A* can be a causal predecessor of an execution of *B* (meaning this that *A* can enable *B*). Nevertheless, if the start times are available and there is an activity instance of *B* which starts before the end of *A*, *A* does not enable *B* in that case.
 
-If *consider_parallelism* is set to *true*, the estimator consider the start time information in this way, if it is set to *false*, only the end times will be considered.
+If *consider_start_times* is set to *true*, the estimator consider the start time information in this way, if it is set to *false*, only the end times will be considered.
