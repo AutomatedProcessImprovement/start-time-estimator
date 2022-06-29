@@ -99,6 +99,64 @@ def mean_idle_multitasking_times(event_log: pd.DataFrame, log_ids: EventLogIDs) 
             sum(abs_multi_times, timedelta(0)) / sum(processing_times, timedelta(0)))
 
 
+def print_waiting_processing_time():
+    log_ids = DEFAULT_CSV_IDS
+    event_log = pd.read_csv("../../process-waste/tests/assets/icpm/handoff-logs/Production.csv")
+    event_log[log_ids.start_time] = pd.to_datetime(event_log[log_ids.start_time], utc=True)
+    event_log[log_ids.end_time] = pd.to_datetime(event_log[log_ids.end_time], utc=True)
+
+    # Case cycle time, idle time, and processing time
+    idle, processing, total = waiting_and_processing_times(event_log, log_ids)
+    print("Total time: {}\nIdle time: {}\nProcessing time: {}".format(
+        sum(total.values(), timedelta(0)).total_seconds(),
+        sum(idle.values(), timedelta(0)).total_seconds(),
+        sum(processing.values(), timedelta(0)).total_seconds()
+    ))
+    # Total processing time (sum of activity instances processing time)
+    durations = (event_log[log_ids.end_time] - event_log[log_ids.start_time]).apply(lambda x: x.total_seconds())
+    proc_times = list(durations.values)
+    print(sum(proc_times))
+
+
+def waiting_and_processing_times(event_log: pd.DataFrame, log_ids: EventLogIDs) -> (dict, dict, dict):
+    idle_times = {}
+    processing_times = {}
+    total_times = {}
+    for (case_id, case) in event_log.groupby([log_ids.case]):
+        start_times = case[log_ids.start_time].to_frame().rename(columns={log_ids.start_time: 'time'})
+        start_times['lifecycle'] = 'start'
+        end_times = case[log_ids.end_time].to_frame().rename(columns={log_ids.end_time: 'time'})
+        end_times['lifecycle'] = 'end'
+        times = start_times.append(end_times).sort_values(['time', 'lifecycle'], ascending=[True, False])
+        counter = 0
+        idle_time = timedelta(0)
+        processing_time = timedelta(0)
+        start_idle_time = times['time'].min()
+        total_time = times['time'].max() - times['time'].min()
+        for time, lifecycle in times.itertuples(index=False):
+            if lifecycle == 'start':
+                counter += 1
+                if counter == 1:
+                    # Idle time has finished
+                    idle_time += time - start_idle_time
+                    # Processing time starts
+                    start_processing_time = time
+            else:
+                counter -= 1
+                if counter < 0:
+                    print("Error, wrong sorting, ending an activity without having another one started.")
+                elif counter == 0:
+                    # Idle time starts again
+                    start_idle_time = time
+                    # Processing time ends
+                    processing_time += time - start_processing_time
+        idle_times[case_id] = idle_time
+        processing_times[case_id] = processing_time
+        total_times[case_id] = total_time
+
+    return idle_times, processing_times, total_times
+
+
 def analyze_results():
     techniques = ["heur_median", "heur_median_2", "heur_median_5",
                   "heur_mode", "heur_mode_2", "heur_mode_5",
@@ -133,4 +191,4 @@ def analyze_estimated_log(log_name: str, method: str, log_ids: EventLogIDs, orig
 
 
 if __name__ == '__main__':
-    analyze_raw_logs()
+    print_waiting_processing_time()
