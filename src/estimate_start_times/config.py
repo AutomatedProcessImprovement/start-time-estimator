@@ -19,7 +19,7 @@ class OutlierStatistic(enum.Enum):
 
 class ConcurrencyOracleType(enum.Enum):
     DEACTIVATED = 1
-    NONE = 2
+    DF = 2
     ALPHA = 3
     HEURISTICS = 4
 

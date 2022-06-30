@@ -4,7 +4,7 @@ from statistics import mode
 import numpy as np
 import pandas as pd
 
-from estimate_start_times.concurrency_oracle import NoConcurrencyOracle, AlphaConcurrencyOracle, \
+from estimate_start_times.concurrency_oracle import DirectlyFollowsConcurrencyOracle, AlphaConcurrencyOracle, \
     HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
 from estimate_start_times.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic, Configuration
 from estimate_start_times.resource_availability import SimpleResourceAvailability
@@ -21,8 +21,8 @@ class StartTimeEstimator:
         # Set concurrency oracle
         if self.config.concurrency_oracle_type == ConcurrencyOracleType.DEACTIVATED:
             self.concurrency_oracle = DeactivatedConcurrencyOracle(self.config)
-        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.NONE:
-            self.concurrency_oracle = NoConcurrencyOracle(self.event_log, self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.DF:
+            self.concurrency_oracle = DirectlyFollowsConcurrencyOracle(self.event_log, self.config)
         elif self.config.concurrency_oracle_type == ConcurrencyOracleType.ALPHA:
             self.concurrency_oracle = AlphaConcurrencyOracle(self.event_log, self.config)
         elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:

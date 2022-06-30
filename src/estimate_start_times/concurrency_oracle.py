@@ -73,13 +73,13 @@ class DeactivatedConcurrencyOracle(ConcurrencyOracle):
         return pd.NaT
 
 
-class NoConcurrencyOracle(ConcurrencyOracle):
+class DirectlyFollowsConcurrencyOracle(ConcurrencyOracle):
     def __init__(self, event_log: pd.DataFrame, config):
         # Default with no concurrency (all directly-follows relations)
         activities = event_log[config.log_ids.activity].unique()
         concurrency = {activity: set() for activity in activities}
         # Super
-        super(NoConcurrencyOracle, self).__init__(concurrency, config)
+        super(DirectlyFollowsConcurrencyOracle, self).__init__(concurrency, config)
 
 
 class AlphaConcurrencyOracle(ConcurrencyOracle):

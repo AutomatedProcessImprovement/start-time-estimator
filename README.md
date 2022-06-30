@@ -103,7 +103,7 @@ configuration = Configuration(
     re_estimation_method=ReEstimationMethod.MODE,
     resource_availability_type=ResourceAvailabilityType.SIMPLE,
     bot_resources={"SYSTEM", "BOT_001"},
-    instant_activities=={"Automatic Validation", "Send Notification"}
+    instant_activities={"Automatic Validation", "Send Notification"}
 )
 ```
 
@@ -123,7 +123,7 @@ configuration = Configuration(
 ```python
 # Set up custom configuration
 configuration = Configuration(
-    concurrency_oracle_type=ConcurrencyOracleType.NONE,
+    concurrency_oracle_type=ConcurrencyOracleType.DF,
     re_estimation_method=ReEstimationMethod.MODE,
     resource_availability_type=ResourceAvailabilityType.SIMPLE
 )
@@ -159,7 +159,7 @@ event_log = read_csv_log(
 # Instantiate desired concurrency oracle
 concurrency_oracle = HeuristicsConcurrencyOracle(event_log, configuration)
 # concurrency_oracle = AlphaConcurrencyOracle(event_log, configuration)
-# concurrency_oracle = NoConcurrencyOracle(event_log, configuration)
+# concurrency_oracle = DirectlyFollowsConcurrencyOracle(event_log, configuration)
 # Add enablement times to the event log
 concurrency_oracle.add_enabled_times(event_log)
 ```

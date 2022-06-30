@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 
 from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
-    NoConcurrencyOracle, DeactivatedConcurrencyOracle
+    DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle
 from estimate_start_times.config import Configuration, HeuristicsThresholds
 from estimate_start_times.utils import read_csv_log
 
@@ -26,7 +26,7 @@ def test_deactivated_concurrency_oracle():
 def test_no_concurrency_oracle():
     config = Configuration()
     event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
-    concurrency_oracle = NoConcurrencyOracle(event_log, config)
+    concurrency_oracle = DirectlyFollowsConcurrencyOracle(event_log, config)
     # No concurrency by default
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': set(), 'D': set(), 'E': set(), 'F': set(), 'G': set(),
                                               'H': set(), 'I': set()}

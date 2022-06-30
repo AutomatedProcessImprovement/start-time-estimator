@@ -36,7 +36,7 @@ def test_estimate_start_times_only_resource():
 def test_estimate_start_times_instant():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.SET_INSTANT,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         reuse_current_start_times=True
     )
@@ -74,7 +74,7 @@ def test_estimate_start_times_instant():
 def test_bot_resources_and_instant_activities():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.SET_INSTANT,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         bot_resources={'Marcus'},
         instant_activities={'H', 'I'}
@@ -107,7 +107,7 @@ def test_bot_resources_and_instant_activities():
 def test_repair_activities_with_duration_over_threshold():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=1.6
@@ -139,7 +139,7 @@ def test_repair_activities_with_duration_over_threshold():
 def test_estimate_start_times_mode():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
@@ -159,7 +159,7 @@ def test_estimate_start_times_mode():
 def test_replace_recorded_start_times_with_estimation():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
@@ -180,7 +180,7 @@ def test_replace_recorded_start_times_with_estimation():
 def test_set_instant_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.SET_INSTANT,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -200,7 +200,7 @@ def test_set_instant_non_estimated_start_times():
 def test_set_mode_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -226,7 +226,7 @@ def test_set_mode_non_estimated_start_times():
 def test_set_mean_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEAN,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -249,7 +249,7 @@ def test_set_mean_non_estimated_start_times():
 def test_set_median_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -279,7 +279,7 @@ def test_get_activity_duration():
     # MEAN
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEAN,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -290,7 +290,7 @@ def test_get_activity_duration():
     # MEDIAN
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
@@ -301,7 +301,7 @@ def test_get_activity_duration():
     # MODE
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
-        concurrency_oracle_type=ConcurrencyOracleType.NONE,
+        concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
