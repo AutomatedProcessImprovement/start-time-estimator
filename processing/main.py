@@ -22,10 +22,21 @@ def run_estimation(event_log_path, configuration, output_log_path):
     end_time = time.process_time()
     print("Estimation finished ({}s).".format(end_time - start_time))
     # Convert timestamp value to datetime
-    extended_event_log[configuration.log_ids.start_time] = timestamp_to_string(extended_event_log[configuration.log_ids.start_time])
-    extended_event_log[configuration.log_ids.end_time] = timestamp_to_string(extended_event_log[configuration.log_ids.end_time])
-    extended_event_log[configuration.log_ids.enabled_time] = timestamp_to_string(extended_event_log[configuration.log_ids.enabled_time])
-    extended_event_log[configuration.log_ids.available_time] = timestamp_to_string(extended_event_log[configuration.log_ids.available_time])
+    extended_event_log[configuration.log_ids.start_time] = timestamp_to_string(
+        extended_event_log[configuration.log_ids.start_time]
+    )
+    extended_event_log[configuration.log_ids.end_time] = timestamp_to_string(
+        extended_event_log[configuration.log_ids.end_time]
+    )
+    extended_event_log[configuration.log_ids.enabled_time] = timestamp_to_string(
+        extended_event_log[configuration.log_ids.enabled_time]
+    )
+    extended_event_log[configuration.log_ids.available_time] = timestamp_to_string(
+        extended_event_log[configuration.log_ids.available_time]
+    )
+    extended_event_log[configuration.log_ids.estimated_start_time] = timestamp_to_string(
+        extended_event_log[configuration.log_ids.estimated_start_time]
+    )
     # Export
     extended_event_log.to_csv(output_log_path, encoding='utf-8', index=False)
 
