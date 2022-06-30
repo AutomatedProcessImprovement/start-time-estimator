@@ -1,5 +1,4 @@
 import math
-from datetime import timedelta
 from statistics import mode
 
 import numpy as np
@@ -86,20 +85,18 @@ class StartTimeEstimator:
         return event_log
 
     def _re_estimate_durations_over_threshold(self, event_log: pd.DataFrame):
-        # Take all the estimated durations of each activity and store the specified statistic of each distribution
-        statistic_durations = (
-            event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
-                .groupby([self.log_ids.activity])
-                .apply(lambda row: row[self.log_ids.end_time] - row[self.log_ids.estimated_start_time])
-                .groupby(level=0)
-                .apply(lambda row: self._apply_statistic(row))
-        )
+        # Get only events with estimated start time
+        estimated_events = event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
         # For each event, if the duration is over the threshold, set the defined statistic
-        for index, event in event_log.iterrows():
-            duration_limit = self.config.outlier_threshold * statistic_durations[event[self.log_ids.activity]]
-            if (not pd.isna(event[self.log_ids.estimated_start_time]) and
-                    (event[self.log_ids.end_time] - event[self.log_ids.estimated_start_time]) > duration_limit):
-                event_log.loc[index, self.log_ids.estimated_start_time] = event[self.log_ids.end_time] - duration_limit
+        for activity, events in estimated_events.groupby([self.log_ids.activity]):
+            statistic_duration = self._apply_statistic(events[self.log_ids.end_time] - events[self.log_ids.estimated_start_time])
+            duration_limit = self.config.outlier_threshold * statistic_duration
+            event_log.loc[
+                (event_log[self.log_ids.activity] == activity) &
+                (~pd.isna(event_log[self.log_ids.estimated_start_time])) &
+                ((event_log[self.log_ids.end_time] - event_log[self.log_ids.estimated_start_time]) > duration_limit),
+                self.log_ids.estimated_start_time
+            ] = event_log[self.log_ids.end_time] - duration_limit
 
     def _set_instant_non_estimated_start_times(self, event_log: pd.DataFrame):
         # Identify events with non_estimated as start time
@@ -110,34 +107,29 @@ class StartTimeEstimator:
         ] = event_log[self.log_ids.end_time]
 
     def _re_estimate_non_estimated_start_times(self, event_log: pd.DataFrame):
-        # Store the durations of the estimated ones
-        activity_durations = (
-            event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
-                .groupby([self.log_ids.activity])
-                .apply(lambda row: row[self.log_ids.end_time] - row[self.log_ids.estimated_start_time])
-        )
-        # Identify events with non_estimated as start time
-        non_estimated_events = event_log[pd.isna(event_log[self.log_ids.estimated_start_time])]
-        for index, non_estimated_event in non_estimated_events.iterrows():
-            activity = non_estimated_event[self.log_ids.activity]
-            # Re-estimate
-            duration = self._get_activity_duration(activity_durations, activity)
-            event_log.loc[index, self.log_ids.estimated_start_time] = non_estimated_event[self.log_ids.end_time] - duration
+        # Get only events with estimated start time
+        estimated_events = event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
+        # For each event, if the duration is over the threshold, set the defined statistic
+        for activity, events in estimated_events.groupby([self.log_ids.activity]):
+            durations = (events[self.log_ids.end_time] - events[self.log_ids.estimated_start_time]).values
+            statistic_duration = self._get_activity_duration(durations)
+            event_log.loc[
+                (event_log[self.log_ids.activity] == activity) &
+                pd.isna(event_log[self.log_ids.estimated_start_time]),
+                self.log_ids.estimated_start_time
+            ] = event_log[self.log_ids.end_time] - statistic_duration
+        # Set remaining non estimated activity instances to instant (those of activities with no estimated time)
+        event_log[self.log_ids.estimated_start_time].fillna(event_log[self.log_ids.end_time], inplace=True)
 
-    def _get_activity_duration(self, activity_durations, activity):
-        if activity in activity_durations:
-            # There have been measured other durations for the activity, take specified statistic
-            if self.config.re_estimation_method == ReEstimationMethod.MODE:
-                return mode(activity_durations[activity])
-            elif self.config.re_estimation_method == ReEstimationMethod.MEDIAN:
-                return np.median(activity_durations[activity])
-            elif self.config.re_estimation_method == ReEstimationMethod.MEAN:
-                return np.mean(activity_durations[activity])
-            else:
-                raise ValueError("Unselected re-estimation method for events with non-estimated start time!")
+    def _get_activity_duration(self, durations):
+        if self.config.re_estimation_method == ReEstimationMethod.MODE:
+            return mode(durations)
+        elif self.config.re_estimation_method == ReEstimationMethod.MEDIAN:
+            return np.median(durations)
+        elif self.config.re_estimation_method == ReEstimationMethod.MEAN:
+            return np.mean(durations)
         else:
-            # There are not other measures for the durations of the activity, set instant (duration = 0)
-            return timedelta(0)
+            raise ValueError("Unselected re-estimation method for events with non-estimated start time!")
 
     def _apply_statistic(self, durations):
         if self.config.outlier_statistic == OutlierStatistic.MODE:

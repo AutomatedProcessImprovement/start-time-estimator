@@ -150,10 +150,10 @@ def test_estimate_start_times_mode():
     third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.estimated_start_time] == first_trace.iloc[0][config.log_ids.end_time] - \
-           (third_trace.iloc[0][config.log_ids.end_time] - first_trace.iloc[0][config.log_ids.end_time])
+           (third_trace.iloc[0][config.log_ids.end_time] - third_trace.iloc[0][config.log_ids.estimated_start_time])
     second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
     assert second_trace.iloc[0][config.log_ids.estimated_start_time] == second_trace.iloc[0][config.log_ids.end_time] - \
-           (third_trace.iloc[0][config.log_ids.end_time] - first_trace.iloc[0][config.log_ids.end_time])
+           (third_trace.iloc[0][config.log_ids.end_time] - third_trace.iloc[0][config.log_ids.estimated_start_time])
 
 
 def test_replace_recorded_start_times_with_estimation():
@@ -170,10 +170,10 @@ def test_replace_recorded_start_times_with_estimation():
     third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.start_time] == first_trace.iloc[0][config.log_ids.end_time] - \
-           (third_trace.iloc[0][config.log_ids.end_time] - first_trace.iloc[0][config.log_ids.end_time])
+           (third_trace.iloc[0][config.log_ids.end_time] - third_trace.iloc[0][config.log_ids.start_time])
     second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
     assert second_trace.iloc[0][config.log_ids.start_time] == second_trace.iloc[0][config.log_ids.end_time] - \
-           (third_trace.iloc[0][config.log_ids.end_time] - first_trace.iloc[0][config.log_ids.end_time])
+           (third_trace.iloc[0][config.log_ids.end_time] - third_trace.iloc[0][config.log_ids.start_time])
     assert config.log_ids.estimated_start_time not in extended_event_log.columns
 
 
@@ -192,6 +192,7 @@ def test_set_instant_non_estimated_start_times():
     # The start time of non-estimated events is the end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.estimated_start_time] == first_trace.iloc[0][config.log_ids.end_time]
+    assert first_trace.iloc[2][config.log_ids.estimated_start_time] == first_trace.iloc[2][config.log_ids.end_time]
     second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
     assert second_trace.iloc[1][config.log_ids.estimated_start_time] == second_trace.iloc[1][config.log_ids.end_time]
 
@@ -217,6 +218,9 @@ def test_set_mode_non_estimated_start_times():
     assert second_trace.iloc[1][config.log_ids.estimated_start_time] == (
             second_trace.iloc[1][config.log_ids.end_time] - timedelta(minutes=30)
     )
+    # The start time of a non-estimated event of an activity with no durations is instant
+    assert first_trace.iloc[2][config.log_ids.estimated_start_time] == first_trace.iloc[2][config.log_ids.end_time]
+    assert second_trace.iloc[2][config.log_ids.estimated_start_time] == second_trace.iloc[2][config.log_ids.end_time]
 
 
 def test_set_mean_non_estimated_start_times():
@@ -237,6 +241,9 @@ def test_set_mean_non_estimated_start_times():
     second_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-02']
     assert second_trace.iloc[1][config.log_ids.estimated_start_time] == second_trace.iloc[1][config.log_ids.end_time] - timedelta(
         minutes=24.5)
+    # The start time of a non-estimated event of an activity with no durations is instant
+    assert first_trace.iloc[2][config.log_ids.estimated_start_time] == first_trace.iloc[2][config.log_ids.end_time]
+    assert second_trace.iloc[2][config.log_ids.estimated_start_time] == second_trace.iloc[2][config.log_ids.end_time]
 
 
 def test_set_median_non_estimated_start_times():
@@ -260,14 +267,15 @@ def test_set_median_non_estimated_start_times():
     assert second_trace.iloc[1][config.log_ids.estimated_start_time] == (
             second_trace.iloc[1][config.log_ids.end_time] - timedelta(minutes=25)
     )
+    # The start time of a non-estimated event of an activity with no durations is instant
+    assert first_trace.iloc[2][config.log_ids.estimated_start_time] == first_trace.iloc[2][config.log_ids.end_time]
+    assert second_trace.iloc[2][config.log_ids.estimated_start_time] == second_trace.iloc[2][config.log_ids.end_time]
 
 
 def test_get_activity_duration():
-    durations = {
-        'A': [timedelta(2), timedelta(2), timedelta(4), timedelta(6), timedelta(7), timedelta(9)],
-        'B': [timedelta(2), timedelta(2), timedelta(4), timedelta(8)],
-        'C': [timedelta(2), timedelta(2), timedelta(3)]
-    }
+    durationsA = [timedelta(2), timedelta(2), timedelta(4), timedelta(6), timedelta(7), timedelta(9)]
+    durationsB = [timedelta(2), timedelta(2), timedelta(4), timedelta(8)]
+    durationsC = [timedelta(2), timedelta(2), timedelta(3)]
     # MEAN
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEAN,
@@ -276,10 +284,9 @@ def test_get_activity_duration():
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
-    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(4)
-    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(days=2, hours=8)
-    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durationsA) == timedelta(5)
+    assert start_time_estimator._get_activity_duration(durationsB) == timedelta(4)
+    assert start_time_estimator._get_activity_duration(durationsC) == timedelta(days=2, hours=8)
     # MEDIAN
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
@@ -288,10 +295,9 @@ def test_get_activity_duration():
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(5)
-    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(3)
-    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(2)
-    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durationsA) == timedelta(5)
+    assert start_time_estimator._get_activity_duration(durationsB) == timedelta(3)
+    assert start_time_estimator._get_activity_duration(durationsC) == timedelta(2)
     # MODE
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
@@ -300,7 +306,6 @@ def test_get_activity_duration():
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
-    assert start_time_estimator._get_activity_duration(durations, 'A') == timedelta(2)
-    assert start_time_estimator._get_activity_duration(durations, 'B') == timedelta(2)
-    assert start_time_estimator._get_activity_duration(durations, 'C') == timedelta(2)
-    assert start_time_estimator._get_activity_duration(durations, 'Z') == timedelta(0)
+    assert start_time_estimator._get_activity_duration(durationsA) == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durationsB) == timedelta(2)
+    assert start_time_estimator._get_activity_duration(durationsC) == timedelta(2)
