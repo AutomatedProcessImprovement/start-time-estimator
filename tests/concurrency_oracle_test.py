@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import pandas as pd
+
 from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     NoConcurrencyOracle, DeactivatedConcurrencyOracle
 from estimate_start_times.config import Configuration, HeuristicsThresholds
@@ -13,12 +15,12 @@ def test_deactivated_concurrency_oracle():
     assert concurrency_oracle.config == config
     # Empty set as concurrency by default
     assert concurrency_oracle.concurrency == {}
-    # The concurrency option is deactivated, so always return [non_estimated_time]
-    assert concurrency_oracle.enabled_since(None, datetime.now()) == config.non_estimated_time
+    # The concurrency option is deactivated, so always return pd.NaT
+    assert pd.isna(concurrency_oracle.enabled_since(None, datetime.now()))
     # There is no concurrency, so always enabled since the last event finished
-    assert concurrency_oracle.enabled_since(None, datetime.fromisoformat('2012-11-07T10:00:00.000+02:00')) == config.non_estimated_time
-    # [non_estimated_time] as the enablement time of the first event in the trace
-    assert concurrency_oracle.enabled_since(None, datetime.fromisoformat('2006-07-20T22:03:11.000+02:00')) == config.non_estimated_time
+    assert pd.isna(concurrency_oracle.enabled_since(None, datetime.fromisoformat('2012-11-07T10:00:00.000+02:00')))
+    # pd.NaT as the enablement time of the first event in the trace
+    assert pd.isna(concurrency_oracle.enabled_since(None, datetime.fromisoformat('2006-07-20T22:03:11.000+02:00')))
 
 
 def test_no_concurrency_oracle():
@@ -36,9 +38,9 @@ def test_no_concurrency_oracle():
     # There is no concurrency, so always enabled since the last event finished
     third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
     assert concurrency_oracle.enabled_since(third_trace, third_trace.iloc[3]) == third_trace.iloc[2][config.log_ids.end_time]
-    # [non_estimated_time] as the enablement time of the first event in the trace
+    # pd.NaT as the enablement time of the first event in the trace
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
-    assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]) == config.non_estimated_time
+    assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
 
 
 def test_alpha_concurrency_oracle():
@@ -62,8 +64,8 @@ def test_alpha_concurrency_oracle():
     # Enabled since its causal input for an event when the previous one is concurrent
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
     assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[3]) == fourth_trace.iloc[1][config.log_ids.end_time]
-    # [non_estimated_time] as the enablement time of the first event in the trace
-    assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]) == config.non_estimated_time
+    # pd.NaT as the enablement time of the first event in the trace
+    assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
 
 
 def test_heuristics_concurrency_oracle_simple():
@@ -87,8 +89,8 @@ def test_heuristics_concurrency_oracle_simple():
     # Enabled since its causal input for an event when the previous one is concurrent
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
     assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[3]) == fourth_trace.iloc[1][config.log_ids.end_time]
-    # [non_estimated_time] as the enablement time of the first event in the trace
-    assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]) == config.non_estimated_time
+    # pd.NaT as the enablement time of the first event in the trace
+    assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
 
 
 def test_heuristics_concurrency_oracle_multi_parallel():

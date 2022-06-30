@@ -48,6 +48,7 @@ def test_estimate_start_times_instant():
         (event_log[config.log_ids.case] == 'trace-01') & (event_log[config.log_ids.activity] == 'C'),
         config.log_ids.start_time
     ] = manually_added_timestamp
+    event_log[config.log_ids.start_time] = pd.to_datetime(event_log[config.log_ids.start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -159,13 +160,12 @@ def test_replace_recorded_start_times_with_estimation():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        replace_recorded_start_times=True
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    extended_event_log = start_time_estimator.estimate()
+    extended_event_log = start_time_estimator.estimate(replace_recorded_start_times=True)
     # The start time of initial events is the most frequent duration
     third_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-03']
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
@@ -181,14 +181,13 @@ def test_set_instant_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.SET_INSTANT,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    start_time_estimator._set_instant_non_estimated_start_times()
+    start_time_estimator._set_instant_non_estimated_start_times(event_log)
     extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
@@ -201,14 +200,13 @@ def test_set_mode_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times(event_log)
     extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
@@ -225,14 +223,13 @@ def test_set_mean_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEAN,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times(event_log)
     extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
@@ -246,14 +243,13 @@ def test_set_median_non_estimated_start_times():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
-    start_time_estimator._re_estimate_non_estimated_start_times()
+    start_time_estimator._re_estimate_non_estimated_start_times(event_log)
     extended_event_log = start_time_estimator.event_log
     # The start time of non-estimated events is the most frequent duration
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
@@ -276,8 +272,7 @@ def test_get_activity_duration():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEAN,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -289,8 +284,7 @@ def test_get_activity_duration():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MEDIAN,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -302,8 +296,7 @@ def test_get_activity_duration():
     config = Configuration(
         re_estimation_method=ReEstimationMethod.MODE,
         concurrency_oracle_type=ConcurrencyOracleType.NONE,
-        resource_availability_type=ResourceAvailabilityType.SIMPLE,
-        non_estimated_time=pd.to_datetime('2000-01-01T10:00:00.000+02:00', format='%Y-%m-%dT%H:%M:%S.%f%z')
+        resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
     event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
     start_time_estimator = StartTimeEstimator(event_log, config)
