@@ -1,8 +1,6 @@
 import enum
 from dataclasses import dataclass, field
 
-import pandas as pd
-
 
 class ReEstimationMethod(enum.Enum):
     SET_INSTANT = 1
@@ -39,7 +37,6 @@ class EventLogIDs:
     available_time: str = 'available_time'
     estimated_start_time: str = 'estimated_start_time'
     resource: str = 'resource'
-    lifecycle: str = 'lifecycle'
 
 
 DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
@@ -49,8 +46,7 @@ DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
                               enabled_time='enabled_time',
                               available_time='available_time',
                               estimated_start_time='estimated_start_time',
-                              resource='Resource',
-                              lifecycle='Lifecycle')
+                              resource='Resource')
 DEFAULT_XES_IDS = EventLogIDs(case='case:concept:name',
                               activity='concept:name',
                               start_time='time:start',
@@ -58,8 +54,7 @@ DEFAULT_XES_IDS = EventLogIDs(case='case:concept:name',
                               enabled_time='time:enabled',
                               available_time='time:available',
                               estimated_start_time='time:estimated_start',
-                              resource='org:resource',
-                              lifecycle='lifecycle:transition')
+                              resource='org:resource')
 
 
 @dataclass

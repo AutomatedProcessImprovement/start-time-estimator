@@ -5,7 +5,7 @@ import pandas as pd
 from estimate_start_times.config import Configuration, ReEstimationMethod, ConcurrencyOracleType, \
     ResourceAvailabilityType, HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 from estimate_start_times.estimator import StartTimeEstimator
-from estimate_start_times.utils import read_csv_log, write_csv_log
+from estimate_start_times.utils import read_csv_log
 
 
 def run_estimation(event_log_path, configuration, output_log_path):
@@ -27,7 +27,7 @@ def run_estimation(event_log_path, configuration, output_log_path):
     extended_event_log[configuration.log_ids.enabled_time] = timestamp_to_string(extended_event_log[configuration.log_ids.enabled_time])
     extended_event_log[configuration.log_ids.available_time] = timestamp_to_string(extended_event_log[configuration.log_ids.available_time])
     # Export
-    write_csv_log(extended_event_log, output_log_path)
+    extended_event_log.to_csv(output_log_path, encoding='utf-8', index=False)
 
 
 def timestamp_to_string(dates: pd.Series) -> pd.Series:

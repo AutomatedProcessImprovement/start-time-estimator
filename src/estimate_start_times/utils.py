@@ -13,9 +13,6 @@ def zip_with_next(iterable):
 def read_csv_log(log_path, config, sort_by_end_time=True) -> pd.DataFrame:
     # Read log
     event_log = pd.read_csv(log_path)
-    # If the events have a lifecycle, retain only 'complete'
-    if config.log_ids.lifecycle in event_log.columns:
-        event_log = event_log[event_log[config.log_ids.lifecycle] == 'complete']
     # Set case id as object
     event_log = event_log.astype({config.log_ids.case: object})
     # Fix missing resources
@@ -32,10 +29,3 @@ def read_csv_log(log_path, config, sort_by_end_time=True) -> pd.DataFrame:
         event_log = event_log.sort_values(config.log_ids.end_time)
     # Return parsed event log
     return event_log
-
-
-def write_csv_log(event_log: pd.DataFrame, log_path: str) -> None:
-    if log_path.endswith(".gz"):
-        event_log.to_csv(log_path, encoding='utf-8', index=False, compression='gzip')
-    else:
-        event_log.to_csv(log_path, encoding='utf-8', index=False)
