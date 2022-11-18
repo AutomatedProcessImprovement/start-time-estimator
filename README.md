@@ -1,6 +1,10 @@
 # Start Time Estimator
 
-The technique takes as input an event log (pd.DataFrame) recording the execution of the activities of a process (including resource information), and produces a version of that event log with estimated start times for each activity instance.
+Python implementation of the start time estimation technique presented in the paper "Repairing Activity Start Times to Improve Business
+Process Simulation", by David Chapela-Campa and Marlon Dumas.
+
+The technique takes as input an event log (pd.DataFrame) recording the execution of the activities of a process (including resource
+information), and produces a version of that event log with estimated start times for each activity instance.
 
 ## Requirements
 
@@ -10,11 +14,15 @@ The technique takes as input an event log (pd.DataFrame) recording the execution
 
 ## Basic Usage
 
-Check [main file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/processing/main.py) for an example of a simple execution, and [config file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/src/estimate_start_times/config.py) for an explanation of the configuration parameters.
+Check [main file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/processing/main.py) for an example of a
+simple execution,
+and [config file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/src/estimate_start_times/config.py) for an
+explanation of the configuration parameters.
 
 ### Examples
 
-Here we provide a simple example of use with the default configuration, followed by different custom configurations to run all the versions of the technique.
+Here we provide a simple example of use with the default configuration, followed by different custom configurations to run all the versions
+of the technique.
 
 ```python
 # Set up default configuration
@@ -118,7 +126,7 @@ configuration = Configuration(
 )
 ```
 
-#### Configuration with no concurrency oracle for the Enablement Time calculation (i.e. assuming directly-follows relations) 
+#### Configuration with no concurrency oracle for the Enablement Time calculation (i.e. assuming directly-follows relations)
 
 ```python
 # Set up custom configuration
@@ -129,7 +137,7 @@ configuration = Configuration(
 )
 ```
 
-#### Configuration only taking into account the Resource Availability Time 
+#### Configuration only taking into account the Resource Availability Time
 
 ```python
 # Set up custom configuration
@@ -142,7 +150,8 @@ configuration = Configuration(
 
 ## Individual Enablement Time Calculation
 
-This package can be used too to calculate the enablement time of the activity instances of an event log, without the need to calculate the resource availability and estimate the start times. A simple example can be found here:
+This package can be used too to calculate the enablement time of the activity instances of an event log, without the need to calculate the
+resource availability and estimate the start times. A simple example can be found here:
 
 ```python
 # Set up default configuration
@@ -164,8 +173,13 @@ concurrency_oracle = HeuristicsConcurrencyOracle(event_log, configuration)
 concurrency_oracle.add_enabled_times(event_log)
 ```
 
-**Warning:** If the event log contains start times, set the parameter *consider_start_times* to *true*. This parameter allows the enablement time calculator to know that it can trust the start times of the event log to discard those activity instances that are being executed in parallel to the current one as a possible causal predecessor. 
+**Warning:** If the event log contains start times, set the parameter *consider_start_times* to *true*. This parameter allows the enablement
+time calculator to know that it can trust the start times of the event log to discard those activity instances that are being executed in
+parallel to the current one as a possible causal predecessor.
 
-For example: if activity *A* always preceedes activity *B*, i.e. there are no concurrency, an execution of *A* can be a causal predecessor of an execution of *B* (meaning this that *A* can enable *B*). Nevertheless, if the start times are available and there is an activity instance of *B* which starts before the end of *A*, *A* does not enable *B* in that case.
+For example: if activity *A* always preceedes activity *B*, i.e. there are no concurrency, an execution of *A* can be a causal predecessor
+of an execution of *B* (meaning this that *A* can enable *B*). Nevertheless, if the start times are available and there is an activity
+instance of *B* which starts before the end of *A*, *A* does not enable *B* in that case.
 
-If *consider_start_times* is set to *true*, the estimator consider the start time information in this way, if it is set to *false*, only the end times will be considered.
+If *consider_start_times* is set to *true*, the estimator consider the start time information in this way, if it is set to *false*, only the
+end times will be considered.
