@@ -5,7 +5,7 @@ import pandas as pd
 from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle
 from estimate_start_times.config import Configuration, HeuristicsThresholds
-from estimate_start_times.utils import read_csv_log
+from pix_utils.input import read_csv_log
 
 
 def test_deactivated_concurrency_oracle():
@@ -18,14 +18,14 @@ def test_deactivated_concurrency_oracle():
     # The concurrency option is deactivated, so always return pd.NaT
     assert pd.isna(concurrency_oracle.enabled_since(None, datetime.now()))
     # There is no concurrency, so always enabled since the last event finished
-    assert pd.isna(concurrency_oracle.enabled_since(None, datetime.fromisoformat('2012-11-07T10:00:00.000+02:00')))
+    assert pd.isna(concurrency_oracle.enabled_since(None, pd.Timestamp('2012-11-07T10:00:00.000+02:00')))
     # pd.NaT as the enablement time of the first event in the trace
-    assert pd.isna(concurrency_oracle.enabled_since(None, datetime.fromisoformat('2006-07-20T22:03:11.000+02:00')))
+    assert pd.isna(concurrency_oracle.enabled_since(None, pd.Timestamp('2006-07-20T22:03:11.000+02:00')))
 
 
 def test_no_concurrency_oracle():
     config = Configuration()
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     concurrency_oracle = DirectlyFollowsConcurrencyOracle(event_log, config)
     # No concurrency by default
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': set(), 'D': set(), 'E': set(), 'F': set(), 'G': set(),
@@ -45,7 +45,7 @@ def test_no_concurrency_oracle():
 
 def test_alpha_concurrency_oracle():
     config = Configuration()
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     concurrency_oracle = AlphaConcurrencyOracle(event_log, config)
     # Concurrency between the activities that appear both one before the other
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': {'D'}, 'D': {'C'}, 'E': set(),
@@ -70,7 +70,7 @@ def test_alpha_concurrency_oracle():
 
 def test_heuristics_concurrency_oracle_simple():
     config = Configuration()
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # Concurrency between the activities that appear both one before the other
     assert concurrency_oracle.concurrency == {'A': set(), 'B': set(), 'C': {'D'}, 'D': {'C'}, 'E': set(),
@@ -95,7 +95,7 @@ def test_heuristics_concurrency_oracle_simple():
 
 def test_heuristics_concurrency_oracle_multi_parallel():
     config = Configuration()
-    event_log = read_csv_log('./tests/assets/test_event_log_3.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_3.csv', config.log_ids, config.missing_resource)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -115,7 +115,7 @@ def test_heuristics_concurrency_oracle_multi_parallel():
 
 def test_heuristics_concurrency_oracle_multi_parallel_noise():
     config = Configuration()
-    event_log = read_csv_log('./tests/assets/test_event_log_3_noise.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_3_noise.csv', config.log_ids, config.missing_resource)
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config

@@ -1,0 +1,3 @@
+[submodule "external_tools/pix-utils"]
+	path = external_tools/pix-utils
+	url = https://github.com/AutomatedProcessImprovement/pix-utils.git

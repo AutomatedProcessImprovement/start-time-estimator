@@ -7,7 +7,7 @@ import pandas as pd
 from estimate_start_times.concurrency_oracle import DirectlyFollowsConcurrencyOracle, AlphaConcurrencyOracle, \
     HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
 from estimate_start_times.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic, Configuration
-from estimate_start_times.resource_availability import SimpleResourceAvailability
+from estimate_start_times.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
 
 
 class StartTimeEstimator:
@@ -32,6 +32,8 @@ class StartTimeEstimator:
         # Set resource availability
         if self.config.resource_availability_type == ResourceAvailabilityType.SIMPLE:
             self.resource_availability = SimpleResourceAvailability(self.event_log, self.config)
+        elif self.config.resource_availability_type == ResourceAvailabilityType.WITH_CALENDAR:
+            self.resource_availability = CalendarResourceAvailability(self.event_log, self.config)
         else:
             raise ValueError("No resource availability defined!")
 
