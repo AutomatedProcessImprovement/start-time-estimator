@@ -8,7 +8,6 @@ setup(
     install_requires=[
         'pandas',
         'numpy',
-        'statistics',
-        'scikit-learn'
+        'statistics'
     ]
 )
