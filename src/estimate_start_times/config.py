@@ -69,7 +69,7 @@ class Configuration:
         working_schedules           Dictionary with the resources as key and the working calendars (RCalendar)
                                     as value.
     """
-    log_ids: EventLogIDs = DEFAULT_CSV_IDS
+    log_ids: EventLogIDs = field(default_factory=lambda: DEFAULT_CSV_IDS)
     concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.HEURISTICS
     resource_availability_type: ResourceAvailabilityType = ResourceAvailabilityType.SIMPLE
     missing_resource: str = "NOT_SET"
