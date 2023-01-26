@@ -4,7 +4,7 @@ import pandas as pd
 
 from estimate_start_times.config import ConcurrencyOracleType, Configuration, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from estimate_start_times.estimator import StartTimeEstimator
-from estimate_start_times.utils import read_csv_log
+from pix_utils.input import read_csv_log
 
 
 def test_estimate_start_times_only_resource():
@@ -13,7 +13,7 @@ def test_estimate_start_times_only_resource():
         concurrency_oracle_type=ConcurrencyOracleType.DEACTIVATED,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -40,10 +40,10 @@ def test_estimate_start_times_instant():
         resource_availability_type=ResourceAvailabilityType.SIMPLE,
         reuse_current_start_times=True
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Set one start timestamp manually
     event_log[config.log_ids.start_time] = pd.NaT
-    manually_added_timestamp = pd.to_datetime('2002-11-07 12:33:00+02:00', format='%Y-%m-%d %H:%M:%S%z', utc=True)
+    manually_added_timestamp = pd.Timestamp("2002-11-07 12:33:00+02:00")
     event_log.loc[
         (event_log[config.log_ids.case] == 'trace-01') & (event_log[config.log_ids.activity] == 'C'),
         config.log_ids.start_time
@@ -79,7 +79,7 @@ def test_bot_resources_and_instant_activities():
         bot_resources={'Marcus'},
         instant_activities={'H', 'I'}
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -112,7 +112,7 @@ def test_repair_activities_with_duration_over_threshold():
         outlier_statistic=OutlierStatistic.MEDIAN,
         outlier_threshold=1.6
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -142,7 +142,7 @@ def test_estimate_start_times_mode():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
@@ -162,7 +162,7 @@ def test_replace_recorded_start_times_with_estimation():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate(replace_recorded_start_times=True)
@@ -183,7 +183,7 @@ def test_set_instant_non_estimated_start_times():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -203,7 +203,7 @@ def test_set_mode_non_estimated_start_times():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -229,7 +229,7 @@ def test_set_mean_non_estimated_start_times():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -252,7 +252,7 @@ def test_set_median_non_estimated_start_times():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     event_log[config.log_ids.estimated_start_time] = pd.to_datetime(event_log[config.log_ids.estimated_start_time], utc=True)
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
@@ -282,7 +282,7 @@ def test_get_activity_duration():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durationsA) == timedelta(5)
     assert start_time_estimator._get_activity_duration(durationsB) == timedelta(4)
@@ -293,7 +293,7 @@ def test_get_activity_duration():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durationsA) == timedelta(5)
     assert start_time_estimator._get_activity_duration(durationsB) == timedelta(3)
@@ -304,7 +304,7 @@ def test_get_activity_duration():
         concurrency_oracle_type=ConcurrencyOracleType.DF,
         resource_availability_type=ResourceAvailabilityType.SIMPLE
     )
-    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config)
+    event_log = read_csv_log('./tests/assets/test_event_log_2.csv', config.log_ids, config.missing_resource)
     start_time_estimator = StartTimeEstimator(event_log, config)
     assert start_time_estimator._get_activity_duration(durationsA) == timedelta(2)
     assert start_time_estimator._get_activity_duration(durationsB) == timedelta(2)

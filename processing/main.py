@@ -5,7 +5,7 @@ import pandas as pd
 from estimate_start_times.config import Configuration, ReEstimationMethod, ConcurrencyOracleType, \
     ResourceAvailabilityType, HeuristicsThresholds, OutlierStatistic, DEFAULT_CSV_IDS
 from estimate_start_times.estimator import StartTimeEstimator
-from estimate_start_times.utils import read_csv_log
+from pix_utils.input import read_csv_log
 
 
 def run_estimation(event_log_path, configuration, output_log_path):

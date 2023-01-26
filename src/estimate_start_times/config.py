@@ -1,6 +1,8 @@
 import enum
 from dataclasses import dataclass, field
 
+from pix_utils.log_ids import DEFAULT_CSV_IDS, EventLogIDs
+
 
 class ReEstimationMethod(enum.Enum):
     SET_INSTANT = 1
@@ -28,36 +30,6 @@ class ResourceAvailabilityType(enum.Enum):
 
 
 @dataclass
-class EventLogIDs:
-    case: str = 'case'
-    activity: str = 'activity'
-    start_time: str = 'start_timestamp'
-    end_time: str = 'end_timestamp'
-    enabled_time: str = 'enabled_time'
-    available_time: str = 'available_time'
-    estimated_start_time: str = 'estimated_start_time'
-    resource: str = 'resource'
-
-
-DEFAULT_CSV_IDS = EventLogIDs(case='case_id',
-                              activity='Activity',
-                              start_time='start_time',
-                              end_time='end_time',
-                              enabled_time='enabled_time',
-                              available_time='available_time',
-                              estimated_start_time='estimated_start_time',
-                              resource='Resource')
-DEFAULT_XES_IDS = EventLogIDs(case='case:concept:name',
-                              activity='concept:name',
-                              start_time='time:start',
-                              end_time='time:timestamp',
-                              enabled_time='time:enabled',
-                              available_time='time:available',
-                              estimated_start_time='time:estimated_start',
-                              resource='org:resource')
-
-
-@dataclass
 class HeuristicsThresholds:
     df: float = 0.9
     l2l: float = 0.9
@@ -69,31 +41,33 @@ class Configuration:
     """Class storing the configuration parameters for the start time estimation.
 
     Attributes:
-        log_ids                         Identifiers for each key element (e.g. executed activity or resource).
-        concurrency_oracle_type         Concurrency oracle to use (e.g. heuristics miner's concurrency oracle).
-        resource_availability_type      Resource availability engine to use (e.g. using resource calendars).
-        missing_resource                String to identify the events with missing resource (it is avoided in
-                                        the resource availability calculation).
-        re_estimation_method            Method (e.g. median) to re-estimate the start times that couldn't be
-                                        estimated due to lack of resource availability and causal predecessors.
-        bot_resources                   Set of resource IDs corresponding bots, in order to set their events as
-                                        instant.
-        instant_activities              Set of instantaneous activities, in order to set their events as instant.
-        heuristics_thresholds           Thresholds for the heuristics concurrency oracle (only used is this oracle
-                                        is selected as [concurrency_oracle_type].
-        reuse_current_start_times       Do not estimate the start times of those activities with already recorded
-                                        start time (caution, the instant activities and bot resources will still
-                                        be set as instant).
-        consider_start_times            Consider start times when checking for the enabled time of an activity in
-                                        the concurrency oracle, if 'true', do not consider the events which end
-                                        time is after the start time of the current activity instance, they overlap
-                                        so no causality between them. In the case of the resource availability, if
-                                        'true', search the availability as the previous end before the start of the
-                                        current activity, not its end.
-        outlier_statistic               Statistic (e.g. median) to calculate the most typical duration from the
-                                        distribution of each activity durations to consider and re-estimate the
-                                        outlier events which estimated duration is higher.
-        outlier_threshold               Threshold to control outliers, those events with estimated durations over
+        log_ids                     Identifiers for each key element (e.g. executed activity or resource).
+        concurrency_oracle_type     Concurrency oracle to use (e.g. heuristics miner's concurrency oracle).
+        resource_availability_type  Resource availability engine to use (e.g. using resource calendars).
+        missing_resource            String to identify the events with missing resource (it is avoided in
+                                    the resource availability calculation).
+        re_estimation_method        Method (e.g. median) to re-estimate the start times that couldn't be
+                                    estimated due to lack of resource availability and causal predecessors.
+        bot_resources               Set of resource IDs corresponding bots, in order to set their events as
+                                    instant.
+        instant_activities          Set of instantaneous activities, in order to set their events as instant.
+        heuristics_thresholds       Thresholds for the heuristics concurrency oracle (only used is this oracle
+                                    is selected as [concurrency_oracle_type].
+        reuse_current_start_times   Do not estimate the start times of those activities with already recorded
+                                    start time (caution, the instant activities and bot resources will still
+                                    be set as instant).
+        consider_start_times        Consider start times when checking for the enabled time of an activity in
+                                    the concurrency oracle, if 'true', do not consider the events which end
+                                    time is after the start time of the current activity instance, they overlap
+                                    so no causality between them. In the case of the resource availability, if
+                                    'true', search the availability as the previous end before the start of the
+                                    current activity, not its end.
+        outlier_statistic           Statistic (e.g. median) to calculate the most typical duration from the
+                                    distribution of each activity durations to consider and re-estimate the
+                                    outlier events which estimated duration is higher.
+        outlier_threshold           Threshold to control outliers, those events with estimated durations over
+        working_schedules           Dictionary with the resources as key and the working calendars (RCalendar)
+                                    as value.
     """
     log_ids: EventLogIDs = DEFAULT_CSV_IDS
     concurrency_oracle_type: ConcurrencyOracleType = ConcurrencyOracleType.HEURISTICS
@@ -107,3 +81,4 @@ class Configuration:
     consider_start_times: bool = False
     outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
     outlier_threshold: float = float('nan')
+    working_schedules: dict = field(default_factory=dict)
