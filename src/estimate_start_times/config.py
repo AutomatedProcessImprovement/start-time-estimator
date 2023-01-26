@@ -76,7 +76,7 @@ class Configuration:
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MEDIAN
     bot_resources: set = field(default_factory=set)
     instant_activities: set = field(default_factory=set)
-    heuristics_thresholds: HeuristicsThresholds = HeuristicsThresholds()
+    heuristics_thresholds: HeuristicsThresholds = field(default_factory=lambda: HeuristicsThresholds())
     reuse_current_start_times: bool = False
     consider_start_times: bool = False
     outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
