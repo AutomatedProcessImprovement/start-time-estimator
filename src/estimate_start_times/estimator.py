@@ -55,7 +55,7 @@ class StartTimeEstimator:
             self.resource_availability.add_resource_availability_times(event_log)
         # Compute enablement time if not already in the log
         if self.log_ids.enabled_time not in event_log.columns:
-            self.concurrency_oracle.add_enabled_times(event_log, set_nat_to_first_event=True)
+            self.concurrency_oracle.add_enabled_times(event_log)
         # Assign estimated start timestamps
         event_log[self.log_ids.estimated_start_time] = event_log[
             [self.log_ids.available_time, self.log_ids.enabled_time]
