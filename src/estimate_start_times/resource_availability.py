@@ -7,9 +7,11 @@ from pix_utils.calendar.resource_calendar import get_last_available_timestamp
 
 
 class ResourceAvailability:
-    def __init__(self, resources_calendar: dict, config: Configuration):
+    def __init__(self, performed_events: dict, working_schedules: dict, config: Configuration):
         # Store dictionary with the resources as key and all its events as value
-        self.resources_calendar = resources_calendar
+        self.performed_events = performed_events
+        # Store dictionary with the resources as key and all its events as value
+        self.working_schedules = working_schedules
         # Configuration parameters
         self.config = config
         # Set log IDs to ease access within class
@@ -25,21 +27,21 @@ class ResourceAvailability:
             timestamp_previous_event = event[self.log_ids.end_time]
         else:
             # If existing resource, take the latest timestamp previous to [timestamp]
-            resource_calendar = self.resources_calendar[resource]
-            timestamp_previous_event = resource_calendar.where(
-                (resource_calendar < event[self.log_ids.end_time]) &
-                ((not self.config.consider_start_times) or (resource_calendar <= event[self.log_ids.start_time]))
+            resource_events = self.performed_events[resource]
+            timestamp_previous_event = resource_events.where(
+                (resource_events < event[self.log_ids.end_time]) &
+                ((not self.config.consider_start_times) or (resource_events <= event[self.log_ids.start_time]))
             ).max()
             if pd.isna(timestamp_previous_event):
                 timestamp_previous_event = pd.NaT
             # If there are non-working periods from the latest previous
             # end timestamp, take the end of the last non-working period
-            if resource in self.config.working_schedules:
+            if resource in self.working_schedules:
                 activity_start = event[self.log_ids.start_time] if self.config.consider_start_times else event[self.log_ids.end_time]
                 timestamp_previous_event = get_last_available_timestamp(
                     start=timestamp_previous_event,
                     end=activity_start,
-                    schedule=self.config.working_schedules[resource]
+                    schedule=self.working_schedules[resource]
                 )
         # Return previous timestamp where the resource became available
         return timestamp_previous_event
@@ -73,7 +75,7 @@ class SimpleResourceAvailability(ResourceAvailability):
         for resource in (resources - config.bot_resources):
             resources_calendar[resource] = event_log[event_log[config.log_ids.resource] == resource][config.log_ids.end_time]
         # Super
-        super(SimpleResourceAvailability, self).__init__(resources_calendar, config)
+        super(SimpleResourceAvailability, self).__init__(resources_calendar, {}, config)
 
 
 class CalendarResourceAvailability(ResourceAvailability):
@@ -84,4 +86,4 @@ class CalendarResourceAvailability(ResourceAvailability):
         for resource in (resources - config.bot_resources):
             resources_calendar[resource] = event_log[event_log[config.log_ids.resource] == resource][config.log_ids.end_time]
         # Super
-        super(CalendarResourceAvailability, self).__init__(resources_calendar, config)
+        super(CalendarResourceAvailability, self).__init__(resources_calendar, config.working_schedules, config)

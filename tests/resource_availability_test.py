@@ -13,7 +13,7 @@ def test_simple_resource_availability():
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded
-    assert set(resource_availability.resources_calendar.keys()) == {'Marcus', 'Dominic', 'Anya'}
+    assert set(resource_availability.performed_events.keys()) == {'Marcus', 'Dominic', 'Anya'}
     # The availability of the resource is the timestamp of its previous executed event
     third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
@@ -38,7 +38,7 @@ def test_simple_resource_availability_bot_resources():
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded
-    assert set(resource_availability.resources_calendar.keys()) == {'Anya'}
+    assert set(resource_availability.performed_events.keys()) == {'Anya'}
     # The availability of a bot resource is the same timestamp as checked
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     assert resource_availability.available_since('Marcus', first_trace.iloc[4]) == first_trace.iloc[4][config.log_ids.end_time]
@@ -75,7 +75,7 @@ def test_calendar_resource_availability():
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded
-    assert set(resource_availability.resources_calendar.keys()) == {'Marcus', 'Dominic'}
+    assert set(resource_availability.performed_events.keys()) == {'Marcus', 'Dominic'}
     # The availability of the resource is the timestamp of its previous executed event
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     second_trace = event_log[event_log[config.log_ids.case] == 'trace-02']
@@ -105,7 +105,7 @@ def test_calendar_resource_availability_bot_resources():
     # The configuration for the algorithm is the passed
     assert resource_availability.config == config
     # All the resources have been loaded
-    assert set(resource_availability.resources_calendar.keys()) == {'Marcus'}
+    assert set(resource_availability.performed_events.keys()) == {'Marcus'}
     # The availability of a bot resource is the same timestamp as checked
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     assert resource_availability.available_since('Dominic', first_trace.iloc[4]) == first_trace.iloc[4][config.log_ids.end_time]
