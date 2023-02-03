@@ -184,3 +184,55 @@ def _get_heuristics_matrices(event_log: pd.DataFrame, activities: list, config: 
                 l2l_dependency[act_a][act_b] = 0
     # Return matrices with dependency values
     return df_count, df_dependency, l2l_dependency
+
+
+class OverlappingConcurrencyOracle(ConcurrencyOracle):
+    def __init__(self, event_log: pd.DataFrame, config: Configuration):
+        # Get the activity labels
+        activities = event_log[config.log_ids.activity].unique()
+        # Get matrix with the frequency of each activity happening overlapping with the rest and in directly-follows order
+        overlapping_relations = _get_overlapping_matrix(event_log, activities, config)
+        # Create concurrency if the overlapping relations is higher than the threshold specifies
+        concurrency = {}
+        for act_a in activities:
+            concurrency[act_a] = set()
+            for act_b in activities:
+                if act_a != act_b:
+                    traces_containing_a = event_log[event_log[config.log_ids.activity] == act_a][config.log_ids.case].unique()
+                    traces_containing_b = event_log[event_log[config.log_ids.activity] == act_b][config.log_ids.case].unique()
+                    observed_together = [case_a for case_a in traces_containing_a if case_a in traces_containing_b]
+                    if len(observed_together) > 0:
+                        overlapping_ratio = overlapping_relations[act_a].get(act_b, 0) / len(observed_together)
+                        if overlapping_ratio >= config.heuristics_thresholds.df:
+                            # Concurrency relation AB, add it to A
+                            concurrency[act_a].add(act_b)
+        # Set flag to consider start times also when individually checking enabled time
+        config.consider_start_times = True
+        # Super
+        super(OverlappingConcurrencyOracle, self).__init__(concurrency, config)
+
+
+def _get_overlapping_matrix(event_log: pd.DataFrame, activities: list, config: Configuration) -> dict:
+    # Initialize dictionary for overlapping relations df_count[A][B] = number of times B overlaps with A
+    overlapping_relations = {activity: {} for activity in activities}
+    # Count overlapping relations
+    for (key, trace) in event_log.groupby([config.log_ids.case]):
+        # Iterate the events of the trace
+        for (i, event) in trace.iterrows():
+            current_activity = event[config.log_ids.activity]
+            # Get labels of overlapping activity instances
+            overlapping_labels = trace[
+                ((event[config.log_ids.start_time] < trace[config.log_ids.start_time]) &  # The current event starts while the other
+                 (trace[config.log_ids.start_time] < event[config.log_ids.end_time])) |  # is being executed; OR
+                ((event[config.log_ids.start_time] < trace[config.log_ids.end_time]) &  # the current event ends while the other
+                 (trace[config.log_ids.end_time] < event[config.log_ids.end_time])) |  # is being executed; OR
+                ((trace[config.log_ids.start_time] <= event[config.log_ids.start_time]) &  # the other event starts and
+                 (event[config.log_ids.end_time] <= trace[config.log_ids.end_time]) &  # ends within the current one,
+                 (event[config.log_ids.activity] != trace[config.log_ids.activity]))  # and it's not the current one.
+                ][config.log_ids.activity]
+            for overlapping_activity in overlapping_labels:
+                overlapping_relations[current_activity][overlapping_activity] = (
+                        overlapping_relations[current_activity].get(overlapping_activity, 0) + 1
+                )
+    # Return matrix with dependency values
+    return overlapping_relations

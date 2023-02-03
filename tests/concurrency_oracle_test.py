@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 
 from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
-    DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle
+    DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle, _get_overlapping_matrix
 from estimate_start_times.config import Configuration, HeuristicsThresholds
 from pix_utils.input import read_csv_log
 
@@ -148,4 +148,46 @@ def test_heuristics_concurrency_oracle_multi_parallel_noise():
         'G': {'C', 'E'},
         'H': {'I'},
         'I': {'H'}
+    }
+
+
+def test_overlapping_concurrency_oracle_simple():
+    config = Configuration()
+    event_log = read_csv_log('./tests/assets/test_event_log_6.csv', config.log_ids, config.missing_resource)
+    # Get concurrency relations with threshold of 75% (C || D)
+    config.heuristics_thresholds.df = 0.75
+    concurrency_oracle = OverlappingConcurrencyOracle(event_log, config)
+    assert concurrency_oracle.concurrency == {
+        'A': set(),
+        'B': set(),
+        'C': {'D'},
+        'D': {'C'},
+        'E': set(),
+        'F': set()
+    }
+    # Get concurrency relations with threshold of 100% (none)
+    config.heuristics_thresholds.df = 1.0
+    concurrency_oracle = OverlappingConcurrencyOracle(event_log, config)
+    assert concurrency_oracle.concurrency == {
+        'A': set(),
+        'B': set(),
+        'C': set(),
+        'D': set(),
+        'E': set(),
+        'F': set()
+    }
+
+
+def test__get_overlapping_matrix():
+    config = Configuration()
+    event_log = read_csv_log('./tests/assets/test_event_log_6.csv', config.log_ids, config.missing_resource)
+    overlapping_relations = _get_overlapping_matrix(event_log, ['A', 'B', 'C', 'D', 'E', 'F'], config)
+    # The configuration for the algorithm is the passed
+    assert overlapping_relations == {
+        'A': dict(),
+        'B': dict(),
+        'C': {'D': 4, 'E': 1},
+        'D': {'C': 4, 'E': 1},
+        'E': {'C': 1, 'D': 1},
+        'F': dict()
     }
