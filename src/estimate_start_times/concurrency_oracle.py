@@ -43,12 +43,8 @@ class ConcurrencyOracle:
         indexes = []
         enabled_times = []
         for (case_id, trace) in event_log.groupby([self.log_ids.case]):
-            if self.log_ids.start_time in trace:
-                # If the log has start times, take the first start/end as start of the trace
-                trace_start_time = min(trace[self.log_ids.start_time].min(), trace[self.log_ids.end_time].min())
-            else:
-                # If not, take the first end
-                trace_start_time = trace[self.log_ids.end_time].min()
+            # First start/end as start of the trace
+            trace_start_time = min(trace[self.log_ids.start_time].min(), trace[self.log_ids.end_time].min())
             # Get the enabled times
             for index, event in trace.iterrows():
                 indexes += [index]

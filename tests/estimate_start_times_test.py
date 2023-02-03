@@ -43,7 +43,7 @@ def test_estimate_start_times_instant():
     event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
     # Set one start timestamp manually
     event_log[config.log_ids.start_time] = pd.NaT
-    manually_added_timestamp = pd.Timestamp("2002-11-07 12:33:00+02:00")
+    manually_added_timestamp = pd.Timestamp("2006-11-07 12:33:00+02:00")
     event_log.loc[
         (event_log[config.log_ids.case] == 'trace-01') & (event_log[config.log_ids.activity] == 'C'),
         config.log_ids.start_time
@@ -52,7 +52,7 @@ def test_estimate_start_times_instant():
     # Estimate start times
     start_time_estimator = StartTimeEstimator(event_log, config)
     extended_event_log = start_time_estimator.estimate()
-    # The start time of initial events is the end time (instant events)
+    # The start time of initial events is the first timestamp of their trace end time (instant events)
     first_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-01']
     assert first_trace.iloc[0][config.log_ids.estimated_start_time] == first_trace.iloc[0][config.log_ids.end_time]
     fourth_trace = extended_event_log[extended_event_log[config.log_ids.case] == 'trace-04']
