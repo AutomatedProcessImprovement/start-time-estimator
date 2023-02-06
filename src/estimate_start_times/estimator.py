@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from estimate_start_times.concurrency_oracle import DirectlyFollowsConcurrencyOracle, AlphaConcurrencyOracle, \
-    HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle
+    HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle
 from estimate_start_times.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic, Configuration
 from estimate_start_times.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
 
@@ -27,6 +27,8 @@ class StartTimeEstimator:
             self.concurrency_oracle = AlphaConcurrencyOracle(self.event_log, self.config)
         elif self.config.concurrency_oracle_type == ConcurrencyOracleType.HEURISTICS:
             self.concurrency_oracle = HeuristicsConcurrencyOracle(self.event_log, self.config)
+        elif self.config.concurrency_oracle_type == ConcurrencyOracleType.OVERLAPPING:
+            self.concurrency_oracle = OverlappingConcurrencyOracle(self.event_log, self.config)
         else:
             raise ValueError("No concurrency oracle defined!")
         # Set resource availability

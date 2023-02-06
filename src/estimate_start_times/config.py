@@ -22,6 +22,7 @@ class ConcurrencyOracleType(enum.Enum):
     DF = 2
     ALPHA = 3
     HEURISTICS = 4
+    OVERLAPPING = 5
 
 
 class ResourceAvailabilityType(enum.Enum):
