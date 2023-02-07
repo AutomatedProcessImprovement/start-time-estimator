@@ -56,7 +56,7 @@ class ResourceAvailability:
         # For each trace in the log, estimate the enabled time of its events
         indexes = []
         resource_availability_times = []
-        for (case_id, trace) in event_log.groupby([self.log_ids.case]):
+        for (case_id, trace) in event_log.groupby(self.log_ids.case):
             # Get the resource availability times
             for index, event in trace.iterrows():
                 indexes += [index]

@@ -92,7 +92,7 @@ class StartTimeEstimator:
         # Get only events with estimated start time
         estimated_events = event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
         # For each event, if the duration is over the threshold, set the defined statistic
-        for activity, events in estimated_events.groupby([self.log_ids.activity]):
+        for activity, events in estimated_events.groupby(self.log_ids.activity):
             statistic_duration = self._apply_statistic(events[self.log_ids.end_time] - events[self.log_ids.estimated_start_time])
             duration_limit = self.config.outlier_threshold * statistic_duration
             event_log.loc[
@@ -114,7 +114,7 @@ class StartTimeEstimator:
         # Get only events with estimated start time
         estimated_events = event_log[~pd.isna(event_log[self.log_ids.estimated_start_time])]
         # For each event, if the duration is over the threshold, set the defined statistic
-        for activity, events in estimated_events.groupby([self.log_ids.activity]):
+        for activity, events in estimated_events.groupby(self.log_ids.activity):
             durations = (events[self.log_ids.end_time] - events[self.log_ids.estimated_start_time]).values
             statistic_duration = self._get_activity_duration(durations)
             event_log.loc[

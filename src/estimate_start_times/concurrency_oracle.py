@@ -42,7 +42,7 @@ class ConcurrencyOracle:
         # For each trace in the log, estimate the enabled time of its events
         indexes = []
         enabled_times = []
-        for (case_id, trace) in event_log.groupby([self.log_ids.case]):
+        for (case_id, trace) in event_log.groupby(self.log_ids.case):
             # First start/end as start of the trace
             trace_start_time = min(trace[self.log_ids.start_time].min(), trace[self.log_ids.end_time].min())
             # Get the enabled times
@@ -100,7 +100,7 @@ def _get_df_relations(event_log: pd.DataFrame, log_ids: EventLogIDs) -> dict:
     # Initialize dictionary for directly-follows relations df_relations[A][B] = number of times B following A
     df_relations = {activity: {} for activity in event_log[log_ids.activity].unique()}
     # Fill dictionary with directly-follows relations
-    for (key, trace) in event_log.groupby([log_ids.case]):
+    for (key, trace) in event_log.groupby(log_ids.case):
         for (i, current_event), (j, future_event) in zip_with_next(trace.iterrows()):
             current_activity = current_event[log_ids.activity]
             future_activity = future_event[log_ids.activity]
@@ -140,7 +140,7 @@ def _get_heuristics_matrices(event_log: pd.DataFrame, activities: list, config: 
     # Initialize dictionary for length 2 loops
     l2l_count = {activity: {} for activity in activities}
     # Count directly-follows and l2l relations
-    for (key, trace) in event_log.groupby([config.log_ids.case]):
+    for (key, trace) in event_log.groupby(config.log_ids.case):
         previous_activity = None
         # Iterate the events of the trace in pairs: (e1, e2), (e2, e3), (e3, e4)...
         for (i, current_event), (j, future_event) in zip_with_next(trace.iterrows()):
@@ -216,7 +216,7 @@ def _get_overlapping_matrix(event_log: pd.DataFrame, activities: list, config: C
     # Initialize dictionary for overlapping relations df_count[A][B] = number of times B overlaps with A
     overlapping_relations = {activity: {} for activity in activities}
     # Count overlapping relations
-    for (key, trace) in event_log.groupby([config.log_ids.case]):
+    for (key, trace) in event_log.groupby(config.log_ids.case):
         # Iterate the events of the trace
         for (i, event) in trace.iterrows():
             current_activity = event[config.log_ids.activity]
