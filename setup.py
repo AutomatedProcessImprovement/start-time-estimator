@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='estimate_start_times',
-    version='1.7.0',
+    version='1.7.1',
     package_dir={"": "src"},
     include_package_data=True,
     install_requires=[
