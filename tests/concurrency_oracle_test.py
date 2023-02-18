@@ -17,10 +17,13 @@ def test_deactivated_concurrency_oracle():
     assert concurrency_oracle.concurrency == {}
     # The concurrency option is deactivated, so always return pd.NaT
     assert pd.isna(concurrency_oracle.enabled_since(None, datetime.now()))
+    assert not concurrency_oracle.enabling_activity_instance(None, datetime.now())
     # There is no concurrency, so always enabled since the last event finished
     assert pd.isna(concurrency_oracle.enabled_since(None, pd.Timestamp('2012-11-07T10:00:00.000+02:00')))
+    assert not concurrency_oracle.enabling_activity_instance(None, pd.Timestamp('2012-11-07T10:00:00.000+02:00'))
     # pd.NaT as the enablement time of the first event in the trace
     assert pd.isna(concurrency_oracle.enabled_since(None, pd.Timestamp('2006-07-20T22:03:11.000+02:00')))
+    assert not concurrency_oracle.enabling_activity_instance(None, pd.Timestamp('2006-07-20T22:03:11.000+02:00'))
 
 
 def test_no_concurrency_oracle():
@@ -35,12 +38,15 @@ def test_no_concurrency_oracle():
     # There is no concurrency, so always enabled since the last event finished
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     assert concurrency_oracle.enabled_since(first_trace, first_trace.iloc[4]) == first_trace.iloc[3][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(first_trace, first_trace.iloc[4]).equals(first_trace.iloc[3])
     # There is no concurrency, so always enabled since the last event finished
     third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
     assert concurrency_oracle.enabled_since(third_trace, third_trace.iloc[3]) == third_trace.iloc[2][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(third_trace, third_trace.iloc[3]).equals(third_trace.iloc[2])
     # pd.NaT as the enablement time of the first event in the trace
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
     assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
+    assert not concurrency_oracle.enabling_activity_instance(fourth_trace, fourth_trace.iloc[0])
 
 
 def test_alpha_concurrency_oracle():
@@ -55,17 +61,22 @@ def test_alpha_concurrency_oracle():
     # Enabled since the previous event when there is no concurrency
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     assert concurrency_oracle.enabled_since(first_trace, first_trace.iloc[6]) == first_trace.iloc[5][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(first_trace, first_trace.iloc[6]).equals(first_trace.iloc[5])
     # Enabled since the previous event when there is no concurrency
     third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
     assert concurrency_oracle.enabled_since(third_trace, third_trace.iloc[5]) == third_trace.iloc[4][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(third_trace, third_trace.iloc[5]).equals(third_trace.iloc[4])
     # Enabled since its causal input for an event when the previous one is concurrent
     second_trace = event_log[event_log[config.log_ids.case] == 'trace-02']
     assert concurrency_oracle.enabled_since(second_trace, second_trace.iloc[3]) == second_trace.iloc[1][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(second_trace, second_trace.iloc[3]).equals(second_trace.iloc[1])
     # Enabled since its causal input for an event when the previous one is concurrent
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
     assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[3]) == fourth_trace.iloc[1][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(fourth_trace, fourth_trace.iloc[3]).equals(fourth_trace.iloc[1])
     # pd.NaT as the enablement time of the first event in the trace
     assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
+    assert not concurrency_oracle.enabling_activity_instance(fourth_trace, fourth_trace.iloc[0])
 
 
 def test_heuristics_concurrency_oracle_simple():
@@ -80,17 +91,48 @@ def test_heuristics_concurrency_oracle_simple():
     # Enabled since the previous event when there is no concurrency
     first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
     assert concurrency_oracle.enabled_since(first_trace, first_trace.iloc[6]) == first_trace.iloc[5][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(first_trace, first_trace.iloc[6]).equals(first_trace.iloc[5])
     # Enabled since the previous event when there is no concurrency
     third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
     assert concurrency_oracle.enabled_since(third_trace, third_trace.iloc[5]) == third_trace.iloc[4][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(third_trace, third_trace.iloc[5]).equals(third_trace.iloc[4])
     # Enabled since its causal input for an event when the previous one is concurrent
     second_trace = event_log[event_log[config.log_ids.case] == 'trace-02']
     assert concurrency_oracle.enabled_since(second_trace, second_trace.iloc[3]) == second_trace.iloc[1][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(second_trace, second_trace.iloc[3]).equals(second_trace.iloc[1])
     # Enabled since its causal input for an event when the previous one is concurrent
     fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
     assert concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[3]) == fourth_trace.iloc[1][config.log_ids.end_time]
+    assert concurrency_oracle.enabling_activity_instance(fourth_trace, fourth_trace.iloc[3]).equals(fourth_trace.iloc[1])
     # pd.NaT as the enablement time of the first event in the trace
     assert pd.isna(concurrency_oracle.enabled_since(fourth_trace, fourth_trace.iloc[0]))
+    assert not concurrency_oracle.enabling_activity_instance(fourth_trace, fourth_trace.iloc[0])
+
+
+def test_add_enable_times():
+    config = Configuration()
+    event_log = read_csv_log('./tests/assets/test_event_log_1.csv', config.log_ids, config.missing_resource)
+    concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
+    concurrency_oracle.add_enabled_times(event_log, set_nat_to_first_event=True, include_enabling_activity=True)
+    # Enabled since the previous event when there is no concurrency
+    first_trace = event_log[event_log[config.log_ids.case] == 'trace-01']
+    assert first_trace.iloc[6][config.log_ids.enabled_time] == first_trace.iloc[5][config.log_ids.end_time]
+    assert first_trace.iloc[6][config.log_ids.enabling_activity] == first_trace.iloc[5][config.log_ids.activity]
+    # Enabled since the previous event when there is no concurrency
+    third_trace = event_log[event_log[config.log_ids.case] == 'trace-03']
+    assert third_trace.iloc[5][config.log_ids.enabled_time] == third_trace.iloc[4][config.log_ids.end_time]
+    assert third_trace.iloc[5][config.log_ids.enabling_activity] == third_trace.iloc[4][config.log_ids.activity]
+    # Enabled since its causal input for an event when the previous one is concurrent
+    second_trace = event_log[event_log[config.log_ids.case] == 'trace-02']
+    assert second_trace.iloc[3][config.log_ids.enabled_time] == second_trace.iloc[1][config.log_ids.end_time]
+    assert second_trace.iloc[3][config.log_ids.enabling_activity] == second_trace.iloc[1][config.log_ids.activity]
+    # Enabled since its causal input for an event when the previous one is concurrent
+    fourth_trace = event_log[event_log[config.log_ids.case] == 'trace-04']
+    assert fourth_trace.iloc[3][config.log_ids.enabled_time] == fourth_trace.iloc[1][config.log_ids.end_time]
+    assert fourth_trace.iloc[3][config.log_ids.enabling_activity] == fourth_trace.iloc[1][config.log_ids.activity]
+    # pd.NaT as the enablement time of the first event in the trace
+    assert pd.isna(fourth_trace.iloc[0][config.log_ids.enabled_time])
+    assert pd.isna(fourth_trace.iloc[0][config.log_ids.enabling_activity])
 
 
 def test_heuristics_concurrency_oracle_multi_parallel():

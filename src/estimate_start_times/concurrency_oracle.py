@@ -1,9 +1,10 @@
-from datetime import datetime
+from typing import Optional
 
 import pandas as pd
 
-from estimate_start_times.config import EventLogIDs, Configuration
+from estimate_start_times.config import Configuration
 from estimate_start_times.utils import zip_with_next
+from pix_utils.log_ids import EventLogIDs
 
 
 class ConcurrencyOracle:
@@ -15,51 +16,63 @@ class ConcurrencyOracle:
         # Set log IDs to ease access within class
         self.log_ids = config.log_ids
 
-    def enabled_since(self, trace, event) -> datetime:
-        # Calculate for pd.DataFrame
-        previous_time = trace[self.log_ids.end_time].where(  # End timestamps of the events:
+    def enabled_since(self, trace, event) -> pd.Timestamp:
+        # Get enabling activity instance or NA if none
+        enabling_activity_instance = self.enabling_activity_instance(trace, event)
+        # Return enabling activity instance
+        return enabling_activity_instance[self.log_ids.end_time] if isinstance(enabling_activity_instance, pd.Series) else pd.NaT
+
+    def enabling_activity_instance(self, trace, event) -> Optional[pd.Series]:
+        # Get the list of previous end times
+        previous_end_times = trace[
             (trace[self.log_ids.end_time] < event[self.log_ids.end_time]) &  # i) previous to the current one;
             ((not self.config.consider_start_times) or  # ii) if parallel check is activated,
              (trace[self.log_ids.end_time] <= event[self.log_ids.start_time])) &  # not overlapping;
             (~trace[self.log_ids.activity].isin(self.concurrency[event[self.log_ids.activity]]))  # iii) with no concurrency;
-        ).max()  # keeping only the last (highest) one
-        if pd.isnull(previous_time):
-            # It is the first event of the trace, or all the previous events where concurrent to it
-            previous_time = pd.NaT
-        # Return calculated value
-        return previous_time
+            ][self.log_ids.end_time]
+        # Get enabling activity instance or NA if none
+        enabling_activity_instance = trace.loc[previous_end_times.idxmax()] if len(previous_end_times) > 0 else None
+        # Return enabling activity instance
+        return enabling_activity_instance
 
-    def add_enabled_times(self, event_log: pd.DataFrame, set_nat_to_first_event: bool = False):
+    def add_enabled_times(self, event_log: pd.DataFrame, set_nat_to_first_event: bool = False, include_enabling_activity: bool = False):
         """
         Add the enabled time of each activity instance to the received event log based on the concurrency relations established in the
         class instance (extracted from the event log passed to the instantiation). For the first event on each trace, set the start of the
         trace as value.
 
-        :param event_log:               event log to add the enabled time information to.
-        :param set_nat_to_first_event:  if False, use the start of the trace as enabled time for the activity instances with no previous
-                                        activity enabling them, otherwise use pd.NaT.
+        :param event_log:                   event log to add the enabled time information to.
+        :param set_nat_to_first_event:      if False, use the start of the trace as enabled time for the activity instances with no previous
+                                            activity enabling them, otherwise use pd.NaT.
+        :param include_enabling_activity:   if True, add a column with the label of the activity enabling the current one.
         """
         # For each trace in the log, estimate the enabled time of its events
-        indexes = []
-        enabled_times = []
+        indexes, enabled_times, enabling_activities = [], [], []
         for (case_id, trace) in event_log.groupby(self.log_ids.case):
+            # Compute trace start time
             if self.log_ids.start_time in trace:
-                # If the log has start times, take the first start/end as start of the trace
                 trace_start_time = min(trace[self.log_ids.start_time].min(), trace[self.log_ids.end_time].min())
             else:
-                # If not, take the first end
                 trace_start_time = trace[self.log_ids.end_time].min()
-            # Get the enabled times
+            # Get the enabling activity of each event
             for index, event in trace.iterrows():
                 indexes += [index]
-                enabled_time = self.enabled_since(trace, event)
-                if set_nat_to_first_event or not pd.isna(enabled_time):
+                enabling_activity_instance = self.enabling_activity_instance(trace, event)
+                # Store enabled time
+                if isinstance(enabling_activity_instance, pd.Series):
                     # Use computed value
-                    enabled_times += [enabled_time]
+                    enabling_activity_label = enabling_activity_instance[self.log_ids.activity]
+                    enabled_times += [enabling_activity_instance[self.log_ids.end_time]]
                 else:
-                    # Use the trace start for activity instances with no previous activity enabling them
-                    enabled_times += [trace_start_time]
-        # Set all trace enabled times at once
+                    # No enabling activity, use trace start or NA
+                    enabling_activity_label = pd.NA
+                    enabled_times += [pd.NaT] if set_nat_to_first_event else [trace_start_time]
+                # Store enabled activity label if necessary
+                if include_enabling_activity:
+                    enabling_activities += [enabling_activity_label]
+        # Set all trace enabled times (and enabling activities if necessary) at once
+        if include_enabling_activity:
+            event_log.loc[indexes, self.log_ids.enabling_activity] = enabling_activities
         event_log.loc[indexes, self.log_ids.enabled_time] = enabled_times
         event_log[self.log_ids.enabled_time] = pd.to_datetime(event_log[self.log_ids.enabled_time], utc=True)
 
@@ -69,8 +82,11 @@ class DeactivatedConcurrencyOracle(ConcurrencyOracle):
         # Super (with empty concurrency)
         super(DeactivatedConcurrencyOracle, self).__init__({}, config)
 
-    def enabled_since(self, trace, event) -> datetime:
+    def enabled_since(self, trace, event) -> pd.Timestamp:
         return pd.NaT
+
+    def enabling_activity_instance(self, trace, event) -> Optional[pd.Series]:
+        return None
 
 
 class DirectlyFollowsConcurrencyOracle(ConcurrencyOracle):
