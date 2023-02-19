@@ -150,8 +150,8 @@ configuration = Configuration(
 
 ## Individual Enablement Time Calculation
 
-This package can be used too to calculate the enablement time of the activity instances of an event log, without the need to calculate the
-resource availability and estimate the start times. A simple example can be found here:
+This package can be used too to calculate the enablement time (and the enabling activity) of the activity instances of an event log, without
+the need to calculate the resource availability and estimate the start times. A simple example can be found here:
 
 ```python
 # Set up default configuration
@@ -170,7 +170,11 @@ concurrency_oracle = HeuristicsConcurrencyOracle(event_log, configuration)
 # concurrency_oracle = AlphaConcurrencyOracle(event_log, configuration)
 # concurrency_oracle = DirectlyFollowsConcurrencyOracle(event_log, configuration)
 # Add enablement times to the event log
-concurrency_oracle.add_enabled_times(event_log)
+concurrency_oracle.add_enabled_times(
+    event_log,
+    set_nat_to_first_event=False,  # Whether to set NaT or the start trace to the events with no enabling activities.
+    include_enabling_activity=True  # Whether to include the label of the enabling activity in a new column or not.
+)
 ```
 
 **Warning:** If the event log contains start times, set the parameter *consider_start_times* to *true*. This parameter allows the enablement
