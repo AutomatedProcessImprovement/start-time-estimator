@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import Optional
 
 import pandas as pd
@@ -209,30 +210,40 @@ def _get_heuristics_matrices(event_log: pd.DataFrame, activities: list, config: 
 class OverlappingConcurrencyOracle(ConcurrencyOracle):
     def __init__(self, event_log: pd.DataFrame, config: Configuration):
         # Get the activity labels
-        activities = event_log[config.log_ids.activity].unique()
+        activities = set(event_log[config.log_ids.activity])
         # Get matrix with the frequency of each activity happening overlapping with the rest and in directly-follows order
         overlapping_relations = _get_overlapping_matrix(event_log, activities, config)
         # Create concurrency if the overlapping relations is higher than the threshold specifies
-        concurrency = {}
+        concurrency = {activity: set() for activity in activities}
+        already_checked = set()
         for act_a in activities:
-            concurrency[act_a] = set()
-            for act_b in activities:
-                if act_a != act_b:
-                    traces_containing_a = event_log[event_log[config.log_ids.activity] == act_a][config.log_ids.case].unique()
-                    traces_containing_b = event_log[event_log[config.log_ids.activity] == act_b][config.log_ids.case].unique()
-                    observed_together = [case_a for case_a in traces_containing_a if case_a in traces_containing_b]
-                    if len(observed_together) > 0:
-                        overlapping_ratio = overlapping_relations[act_a].get(act_b, 0) / len(observed_together)
-                        if overlapping_ratio >= config.heuristics_thresholds.df:
-                            # Concurrency relation AB, add it to A
-                            concurrency[act_a].add(act_b)
+            # Store as already checked to avoid redundant checks
+            already_checked.add(act_a)
+            # Get the number of occurrences of A per case
+            occurrences_a = Counter(event_log[event_log[config.log_ids.activity] == act_a][config.log_ids.case])
+            for act_b in (activities - already_checked):
+                # Get the number of occurrences of B per case
+                occurrences_b = Counter(event_log[event_log[config.log_ids.activity] == act_b][config.log_ids.case])
+                # Compute number of times they co-occur
+                co_occurrences = sum([
+                    occurrences_a[case_id] * occurrences_b[case_id]
+                    for case_id
+                    in set(list(occurrences_a.keys()) + list(occurrences_b.keys()))
+                ])
+                # Check if the proportion of overlapping occurrences is higher than the established threshold
+                if co_occurrences > 0:
+                    overlapping_ratio = overlapping_relations[act_a].get(act_b, 0) / co_occurrences
+                    if overlapping_ratio >= config.heuristics_thresholds.df:
+                        # Concurrency relation AB, add it
+                        concurrency[act_a].add(act_b)
+                        concurrency[act_b].add(act_a)
         # Set flag to consider start times also when individually checking enabled time
         config.consider_start_times = True
         # Super
         super(OverlappingConcurrencyOracle, self).__init__(concurrency, config)
 
 
-def _get_overlapping_matrix(event_log: pd.DataFrame, activities: list, config: Configuration) -> dict:
+def _get_overlapping_matrix(event_log: pd.DataFrame, activities: set, config: Configuration) -> dict:
     # Initialize dictionary for overlapping relations df_count[A][B] = number of times B overlaps with A
     overlapping_relations = {activity: {} for activity in activities}
     # Count overlapping relations
