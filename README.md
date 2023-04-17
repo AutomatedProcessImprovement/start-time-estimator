@@ -16,7 +16,7 @@ information), and produces a version of that event log with estimated start time
 
 Check [main file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/processing/main.py) for an example of a
 simple execution,
-and [config file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/src/estimate_start_times/config.py) for an
+and [config file](https://github.com/AutomatedProcessImprovement/start-time-estimator/blob/main/src/start_time_estimator/config.py) for an
 explanation of the configuration parameters.
 
 ### Examples
