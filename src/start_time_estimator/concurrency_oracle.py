@@ -3,8 +3,8 @@ from typing import Optional
 
 import pandas as pd
 
-from estimate_start_times.config import Configuration
-from estimate_start_times.utils import zip_with_next
+from start_time_estimator.config import Configuration
+from start_time_estimator.utils import zip_with_next
 from pix_utils.log_ids import EventLogIDs
 
 

@@ -1,7 +1,7 @@
 import pandas as pd
 
-from estimate_start_times.config import Configuration
-from estimate_start_times.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
+from start_time_estimator.config import Configuration
+from start_time_estimator.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
 from pix_utils.calendar.resource_calendar import RCalendar, Interval
 from pix_utils.input import read_csv_log
 

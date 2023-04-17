@@ -4,10 +4,10 @@ from statistics import mode
 import numpy as np
 import pandas as pd
 
-from estimate_start_times.concurrency_oracle import DirectlyFollowsConcurrencyOracle, AlphaConcurrencyOracle, \
+from start_time_estimator.concurrency_oracle import DirectlyFollowsConcurrencyOracle, AlphaConcurrencyOracle, \
     HeuristicsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle
-from estimate_start_times.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic, Configuration
-from estimate_start_times.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
+from start_time_estimator.config import ConcurrencyOracleType, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic, Configuration
+from start_time_estimator.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
 
 
 class StartTimeEstimator:

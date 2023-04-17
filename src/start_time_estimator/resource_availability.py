@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from estimate_start_times.config import Configuration
+from start_time_estimator.config import Configuration
 from pix_utils.calendar.resource_calendar import get_last_available_timestamp
 
 

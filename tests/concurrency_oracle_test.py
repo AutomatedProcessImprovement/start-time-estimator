@@ -2,9 +2,9 @@ from datetime import datetime
 
 import pandas as pd
 
-from estimate_start_times.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
+from start_time_estimator.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle, _get_overlapping_matrix
-from estimate_start_times.config import Configuration, HeuristicsThresholds
+from start_time_estimator.config import Configuration, HeuristicsThresholds
 from pix_utils.input import read_csv_log
 
 

@@ -2,8 +2,8 @@ from datetime import timedelta
 
 import pandas as pd
 
-from estimate_start_times.config import ConcurrencyOracleType, Configuration, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
-from estimate_start_times.estimator import StartTimeEstimator
+from start_time_estimator.config import ConcurrencyOracleType, Configuration, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
+from start_time_estimator.estimator import StartTimeEstimator
 from pix_utils.input import read_csv_log
 
 
