@@ -147,8 +147,8 @@ class HeuristicsConcurrencyOracle(ConcurrencyOracle):
                 if (act_a != act_b and  # They are not the same activity
                         df_count[act_a].get(act_b, 0) > 0 and  # 'B' follows 'A' at least once
                         df_count[act_b].get(act_a, 0) > 0 and  # 'A' follows 'B' at least once
-                        l2l_dependency[act_a].get(act_b, 0) < config.heuristics_thresholds.l2l and  # 'A' and 'B' are not a length 2 loop
-                        abs(df_dependency[act_a].get(act_b, 0)) < config.heuristics_thresholds.df):  # The df relations are weak
+                        l2l_dependency[act_a].get(act_b, 0) < config.concurrency_thresholds.l2l and  # 'A' and 'B' are not a length 2 loop
+                        abs(df_dependency[act_a].get(act_b, 0)) < config.concurrency_thresholds.df):  # The df relations are weak
                     # Concurrency relation AB, add it to A
                     concurrency[act_a].add(act_b)
         # Super
@@ -195,8 +195,8 @@ def _get_heuristics_matrices(event_log: pd.DataFrame, activities: list, config: 
     for act_a in activities:
         for act_b in activities:
             if act_a != act_b and \
-                    l1l_dependency[act_a] < config.heuristics_thresholds.l1l and \
-                    l1l_dependency[act_b] < config.heuristics_thresholds.l1l:
+                    l1l_dependency[act_a] < config.concurrency_thresholds.l1l and \
+                    l1l_dependency[act_b] < config.concurrency_thresholds.l1l:
                 # Process directly follows dependency value A -> B
                 aba = l2l_count[act_a].get(act_b, 0)
                 bab = l2l_count[act_b].get(act_a, 0)
@@ -233,7 +233,7 @@ class OverlappingConcurrencyOracle(ConcurrencyOracle):
                 # Check if the proportion of overlapping occurrences is higher than the established threshold
                 if co_occurrences > 0:
                     overlapping_ratio = overlapping_relations[act_a].get(act_b, 0) / co_occurrences
-                    if overlapping_ratio >= config.heuristics_thresholds.df:
+                    if overlapping_ratio >= config.concurrency_thresholds.df:
                         # Concurrency relation AB, add it
                         concurrency[act_a].add(act_b)
                         concurrency[act_b].add(act_a)

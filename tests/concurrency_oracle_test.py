@@ -4,7 +4,7 @@ import pandas as pd
 
 from start_time_estimator.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle, _get_overlapping_matrix
-from start_time_estimator.config import Configuration, HeuristicsThresholds
+from start_time_estimator.config import Configuration, ConcurrencyThresholds
 from pix_utils.input import read_csv_log
 
 
@@ -175,7 +175,7 @@ def test_heuristics_concurrency_oracle_multi_parallel_noise():
     }
     # Increasing the thresholds so the directly-follows relations and the length-2 loops
     # detection only detect when the relation happens all the times the activities appear.
-    config = Configuration(heuristics_thresholds=HeuristicsThresholds(df=1.0, l2l=1.0))
+    config = Configuration(concurrency_thresholds=ConcurrencyThresholds(df=1.0, l2l=1.0))
     concurrency_oracle = HeuristicsConcurrencyOracle(event_log, config)
     # The configuration for the algorithm is the passed
     assert concurrency_oracle.config == config
@@ -197,7 +197,7 @@ def test_overlapping_concurrency_oracle_simple():
     config = Configuration()
     event_log = read_csv_log('./tests/assets/test_event_log_6.csv', config.log_ids, config.missing_resource)
     # Get concurrency relations with threshold of 75% (C || D)
-    config.heuristics_thresholds.df = 0.75
+    config.concurrency_thresholds.df = 0.75
     concurrency_oracle = OverlappingConcurrencyOracle(event_log, config)
     assert concurrency_oracle.concurrency == {
         'A': set(),
@@ -208,7 +208,7 @@ def test_overlapping_concurrency_oracle_simple():
         'F': set()
     }
     # Get concurrency relations with threshold of 100% (none)
-    config.heuristics_thresholds.df = 1.0
+    config.concurrency_thresholds.df = 1.0
     concurrency_oracle = OverlappingConcurrencyOracle(event_log, config)
     assert concurrency_oracle.concurrency == {
         'A': set(),

@@ -31,7 +31,7 @@ class ResourceAvailabilityType(enum.Enum):
 
 
 @dataclass
-class HeuristicsThresholds:
+class ConcurrencyThresholds:
     df: float = 0.9
     l2l: float = 0.9
     l1l: float = 0.9
@@ -52,8 +52,9 @@ class Configuration:
         bot_resources               Set of resource IDs corresponding bots, in order to set their events as
                                     instant.
         instant_activities          Set of instantaneous activities, in order to set their events as instant.
-        heuristics_thresholds       Thresholds for the heuristics concurrency oracle (only used is this oracle
-                                    is selected as [concurrency_oracle_type].
+        concurrency_thresholds      Thresholds for the concurrency oracle. The three thresholds [df], [l1l],
+                                    and [l2l] are used in the Heuristics oracle. In the overlapping oracle,
+                                    only [df] is used.
         reuse_current_start_times   Do not estimate the start times of those activities with already recorded
                                     start time (caution, the instant activities and bot resources will still
                                     be set as instant).
@@ -77,7 +78,7 @@ class Configuration:
     re_estimation_method: ReEstimationMethod = ReEstimationMethod.MEDIAN
     bot_resources: set = field(default_factory=set)
     instant_activities: set = field(default_factory=set)
-    heuristics_thresholds: HeuristicsThresholds = field(default_factory=lambda: HeuristicsThresholds())
+    concurrency_thresholds: ConcurrencyThresholds = field(default_factory=lambda: ConcurrencyThresholds())
     reuse_current_start_times: bool = False
     consider_start_times: bool = False
     outlier_statistic: OutlierStatistic = OutlierStatistic.MEDIAN
