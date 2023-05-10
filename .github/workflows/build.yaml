@@ -22,7 +22,7 @@ jobs:
     name: Build and test, Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     environment:
-      name: pypi
+      name: PyPI
       url: https://pypi.org/p/start-time-estimator
     permissions:
       id-token: write
