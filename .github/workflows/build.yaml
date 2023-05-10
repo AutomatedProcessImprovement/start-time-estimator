@@ -26,6 +26,8 @@ jobs:
       url: https://pypi.org/p/start-time-estimator
     permissions:
       id-token: write
+      contents: write
+      packages: write
     strategy:
       matrix:
         python-version: [ '3.9' ]
