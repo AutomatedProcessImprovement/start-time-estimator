@@ -21,6 +21,11 @@ jobs:
   build:
     name: Build and test, Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/start-time-estimator
+    permissions:
+      id-token: write
     strategy:
       matrix:
         python-version: [ '3.9' ]
@@ -87,6 +92,4 @@ jobs:
         if: github.ref == 'refs/heads/main'
 
       - name: Publish to PyPI
-        run: |
-          poetry publish
-        if: github.ref == 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@release/v1
