@@ -5,7 +5,7 @@ import pandas as pd
 from start_time_estimator.concurrency_oracle import AlphaConcurrencyOracle, HeuristicsConcurrencyOracle, \
     DirectlyFollowsConcurrencyOracle, DeactivatedConcurrencyOracle, OverlappingConcurrencyOracle, _get_overlapping_matrix
 from start_time_estimator.config import Configuration, ConcurrencyThresholds
-from pix_utils.input import read_csv_log
+from pix_framework.input import read_csv_log
 
 
 def test_deactivated_concurrency_oracle():

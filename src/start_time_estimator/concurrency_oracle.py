@@ -5,7 +5,7 @@ import pandas as pd
 
 from start_time_estimator.config import Configuration
 from start_time_estimator.utils import zip_with_next
-from pix_utils.log_ids import EventLogIDs
+from pix_framework.log_ids import EventLogIDs
 
 
 class ConcurrencyOracle:

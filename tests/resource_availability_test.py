@@ -2,8 +2,8 @@ import pandas as pd
 
 from start_time_estimator.config import Configuration
 from start_time_estimator.resource_availability import SimpleResourceAvailability, CalendarResourceAvailability
-from pix_utils.calendar.resource_calendar import RCalendar, Interval
-from pix_utils.input import read_csv_log
+from pix_framework.calendar.resource_calendar import RCalendar, Interval
+from pix_framework.input import read_csv_log
 
 
 def test_simple_resource_availability():

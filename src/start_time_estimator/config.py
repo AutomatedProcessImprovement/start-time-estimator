@@ -1,7 +1,7 @@
 import enum
 from dataclasses import dataclass, field
 
-from pix_utils.log_ids import DEFAULT_CSV_IDS, EventLogIDs
+from pix_framework.log_ids import DEFAULT_CSV_IDS, EventLogIDs
 
 
 class ReEstimationMethod(enum.Enum):

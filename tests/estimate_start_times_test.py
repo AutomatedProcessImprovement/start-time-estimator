@@ -4,7 +4,7 @@ import pandas as pd
 
 from start_time_estimator.config import ConcurrencyOracleType, Configuration, ReEstimationMethod, ResourceAvailabilityType, OutlierStatistic
 from start_time_estimator.estimator import StartTimeEstimator
-from pix_utils.input import read_csv_log
+from pix_framework.input import read_csv_log
 
 
 def test_estimate_start_times_only_resource():

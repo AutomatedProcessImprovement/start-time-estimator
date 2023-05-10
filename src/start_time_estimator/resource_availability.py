@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 
 from start_time_estimator.config import Configuration
-from pix_utils.calendar.resource_calendar import get_last_available_timestamp
+from pix_framework.calendar.resource_calendar import get_last_available_timestamp
 
 
 class ResourceAvailability:
