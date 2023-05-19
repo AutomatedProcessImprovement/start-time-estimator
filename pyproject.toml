@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "start-time-estimator"
-version = "1.10.7"
+version = "1.10.8"
 description = "Python package to estimate the enabled time, enabling activity, and resource availability time of each activity instance in an event log."
 authors = ["David Chapela de la Campa <david.chapela.delacampa@gmail.com>"]
 readme = "README.md"
