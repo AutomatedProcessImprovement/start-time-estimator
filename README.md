@@ -1,5 +1,8 @@
 # Start Time Estimator
 
+![build](https://github.com/AutomatedProcessImprovement/start-time-estimator/actions/workflows/build.yaml/badge.svg)
+![version](https://img.shields.io/github/v/tag/AutomatedProcessImprovement/start-time-estimator)
+
 Python implementation of the start time estimation technique presented in the paper "Repairing Activity Start Times to Improve Business
 Process Simulation", by David Chapela-Campa and Marlon Dumas.
 
