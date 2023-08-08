@@ -1,3 +1,7 @@
+🚨 This repository is now a subpackage of `pix-framework.discovery`, https://github.com/AutomatedProcessImprovement/pix-framework/tree/main/src/pix_framework/discovery/start_time_estimator.
+
+---
+
 # Start Time Estimator
 
 ![build](https://github.com/AutomatedProcessImprovement/start-time-estimator/actions/workflows/build.yaml/badge.svg)
